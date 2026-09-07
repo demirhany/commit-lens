@@ -1,0 +1,1 @@
+![Architecture Diagram](/docs/commitlens_system_architecture.png)
