@@ -107,3 +107,32 @@ data class GitHubSearchCommitResponseDto(
     @JsonProperty("total_count") val totalCount: Int, // The total number of commits found in the search.
     val items: List<GitHubCommitItemDto> // The list of commit items found in the search.
 )
+
+///////////////////////////////////////////////////////////////////////////////////
+
+// GitHub File: It contains information about a file in the repository.
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class GitHubFileDto(
+    val filename: String,
+    val status: String, // modified, added, removed
+    val additions: Int = 0,
+    val deletions: Int = 0,
+    val changes: Int = 0,
+//    val patch: String? = null // Git unified diff/patch content
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class GitHubStatsDto(
+    val total: Int = 0,
+    val additions: Int = 0,
+    val deletions: Int = 0
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class GitHubSingleCommitDto(
+    val sha: String,
+    @JsonProperty("html_url") val htmlUrl: String?,
+    val commit: GitHubCommitDetailDto,
+    val stats: GitHubStatsDto = GitHubStatsDto(),
+    val files: List<GitHubFileDto> = emptyList()
+)
