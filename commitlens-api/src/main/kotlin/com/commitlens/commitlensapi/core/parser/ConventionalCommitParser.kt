@@ -11,6 +11,18 @@ class ConventionalCommitParser {
     }
 
     fun parse(message: String): ParsedCommitMessageDto {
+        if (message.isBlank()) {
+            return ParsedCommitMessageDto(
+                rawMessage = message,
+                type = null,
+                scope = null,
+                description = "",
+                isBreakingChange = false,
+                isConventional = false,
+                jiraKeys = emptyList()
+            )
+        }
+
         val trimmed = message.trim()
         val firstLine = trimmed.lines().firstOrNull()?.trim() ?: ""
         val match = CONVENTIONAL_REGEX.find(firstLine)
