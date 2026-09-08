@@ -3,6 +3,7 @@ package com.commitlens.commitlensapi.api.controller
 import com.commitlens.commitlensapi.core.model.UnifiedCommitDetailDto
 import com.commitlens.commitlensapi.core.model.UnifiedCommitSearchResponseDto
 import com.commitlens.commitlensapi.core.model.UnifiedRepoDto
+import com.commitlens.commitlensapi.core.model.base.ApiResponse
 import com.commitlens.commitlensapi.provider.GitProviderFactory
 import com.commitlens.commitlensapi.provider.GitProviderType
 import org.springframework.web.bind.annotation.GetMapping
@@ -21,8 +22,9 @@ class GitAnalysisController(
     @GetMapping("/repos")
     fun getRepos(
         @RequestParam(defaultValue = "GITHUB") provider: GitProviderType
-    ): List<UnifiedRepoDto> {
-        return providerFactory.getStrategy(provider).getRepos()
+    ): ApiResponse<List<UnifiedRepoDto>> {
+        val repos = providerFactory.getStrategy(provider).getRepos()
+        return ApiResponse.success(data = repos)
     }
 
     // Search for commits in a specific repository of the specified Git provider (default is GitHub)
@@ -33,8 +35,9 @@ class GitAnalysisController(
         @RequestParam query: String,
         @RequestParam(defaultValue = "300") limit: Int,
         @RequestParam(defaultValue = "GITHUB") provider: GitProviderType
-    ): UnifiedCommitSearchResponseDto {
-        return providerFactory.getStrategy(provider).searchCommits(owner, repo, query, limit)
+    ): ApiResponse<UnifiedCommitSearchResponseDto> {
+        val searchResult = providerFactory.getStrategy(provider).searchCommits(owner, repo, query, limit)
+        return ApiResponse.success(data = searchResult)
     }
 
     // Fetch and return detailed information about a specific commit in a repository of the specified Git provider (default is GitHub)
@@ -44,7 +47,8 @@ class GitAnalysisController(
         @PathVariable repo: String,
         @PathVariable sha: String,
         @RequestParam(defaultValue = "GITHUB") provider: GitProviderType
-    ): UnifiedCommitDetailDto {
-        return providerFactory.getStrategy(provider).getCommitDetails(owner, repo, sha)
+    ): ApiResponse<UnifiedCommitDetailDto> {
+        val commitDetails = providerFactory.getStrategy(provider).getCommitDetails(owner, repo, sha)
+        return ApiResponse.success(data = commitDetails)
     }
 }
