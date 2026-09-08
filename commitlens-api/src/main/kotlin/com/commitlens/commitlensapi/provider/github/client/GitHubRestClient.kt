@@ -13,7 +13,6 @@ import tools.jackson.databind.ObjectMapper
 @Component
 class GitHubRestClient(
     private val gitHubProperties: GitHubProperties,
-    private val objectMapper: ObjectMapper
 ) {
     // Initialize the RestClient with the base URL and authorization header
     private val restClient: RestClient = RestClient.builder()
