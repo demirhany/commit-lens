@@ -8,5 +8,5 @@ data class UnifiedRawCommitDto(
     val authorName: String,
     val authorEmail: String?,
     val date: Instant?,
-    val htmlUrl: String,
+    val htmlUrl: String?,
 )
