@@ -2,7 +2,7 @@ package com.commitlens.commitlensapi.provider.github.model
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import kotlin.time.Instant
+import java.time.Instant
 
 /*
 * GitHub Repo JSON Structure:

@@ -1,6 +1,6 @@
 package com.commitlens.commitlensapi.core.model
 
-import kotlin.time.Instant
+import java.time.Instant
 
 data class UnifiedRawCommitDto(
     val sha: String,
