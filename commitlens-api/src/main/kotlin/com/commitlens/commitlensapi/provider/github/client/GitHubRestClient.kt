@@ -28,11 +28,11 @@ class GitHubRestClient(
             .retrieve()
             // Deserialize the response into a list of GitHubRepoDto
             .body(object : ParameterizedTypeReference<List<GitHubRepoDto>>() {})
-            ?: emptyList()
+            ?: throw IllegalStateException("GitHub response body was empty when fetching user repositories")
     }
 
     // Search for commits in a specific repository based on the provided query (including substrings like "Jira key", "feat", etc.)
-    fun searchCommits(owner: String, repo: String, query: String, page: Int = 1, perPage: Int = 100): GitHubSearchCommitResponseDto? {
+    fun searchCommits(owner: String, repo: String, query: String, page: Int = 1, perPage: Int = 100): GitHubSearchCommitResponseDto {
         return restClient.get()
             .uri { uriBuilder ->
                 uriBuilder.path("/search/commits")
@@ -45,7 +45,7 @@ class GitHubRestClient(
             }
             .retrieve()
             // Deserialize the response into a GitHubSearchCommitResponseDto and return the list of commit items in that dto
-            .body(GitHubSearchCommitResponseDto::class.java)
+            .body(GitHubSearchCommitResponseDto::class.java)?: throw IllegalStateException("GitHub search API returned an empty response body for query: '$query'")
     }
 
     // Get the recent commits from a specific repository, with optional pagination parameters (page and perPage)
@@ -54,7 +54,7 @@ class GitHubRestClient(
             .uri("/repos/{owner}/{repo}/commits?page={page}&per_page={perPage}", owner, repo, page, perPage)
             .retrieve()
             .body(object : ParameterizedTypeReference<List<GitHubCommitItemDto>>() {})
-            ?: emptyList()
+            ?: throw IllegalStateException("GitHub response body was empty when fetching recent commits in repo: $owner/$repo")
     }
 
     // Get commit details including stats, file changes, and patches
@@ -63,6 +63,6 @@ class GitHubRestClient(
             .uri("/repos/{owner}/{repo}/commits/{sha}", owner, repo, sha)
             .retrieve()
             .body(GitHubSingleCommitDto::class.java)
-            ?: throw NoSuchElementException("Commit not found: $sha")
+            ?: throw IllegalStateException("GitHub response body was empty for commit: $sha in repo: $owner/$repo")
     }
 }
