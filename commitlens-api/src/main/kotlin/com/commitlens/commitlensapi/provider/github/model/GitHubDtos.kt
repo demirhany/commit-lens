@@ -110,6 +110,43 @@ data class GitHubSearchCommitResponseDto(
 
 ///////////////////////////////////////////////////////////////////////////////////
 
+/*
+* GitHub Single Commit API JSON Structure:
+* {
+*   "sha": "6dcb09b5b57875f334f61aebed695e2e4193db5e",
+*   "html_url": "https://github.com/octocat/commitlens-api/commit/6dcb09b5b57875f334f61aebed695e2e4193db5e",
+*   "commit": {
+*     "message": "feat(auth): CL-102 add jwt authentication filter",
+*     "author": {
+*       "name": "Octocat",
+*       "email": "octocat@github.com",
+*       "date": "2026-09-08T07:30:00Z"
+*     }
+*   },
+*   "stats": {
+*     "total": 45,
+*     "additions": 38,
+*     "deletions": 7
+*   },
+*   "files": [
+*     {
+*       "filename": "src/main/kotlin/com/commitlens/api/auth/JwtFilter.kt",
+*       "status": "added",
+*       "additions": 35,
+*       "deletions": 0,
+*       "changes": 35
+*     },
+*     {
+*       "filename": "src/main/resources/application.yml",
+*       "status": "modified",
+*       "additions": 3,
+*       "deletions": 7,
+*       "changes": 10
+*     }
+*   ]
+* }
+*/
+
 // GitHub File: It contains information about a file in the repository.
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitHubFileDto(
@@ -121,6 +158,7 @@ data class GitHubFileDto(
 //    val patch: String? = null // Git unified diff/patch content
 )
 
+// GitHub Stats: It contains statistics about a commit, including total changes, additions, and deletions.
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitHubStatsDto(
     val total: Int = 0,
@@ -128,6 +166,7 @@ data class GitHubStatsDto(
     val deletions: Int = 0
 )
 
+// GitHub Single Commit: It contains detailed information about a single commit, including SHA, HTML URL, commit details, stats, and file changes.
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitHubSingleCommitDto(
     val sha: String,
