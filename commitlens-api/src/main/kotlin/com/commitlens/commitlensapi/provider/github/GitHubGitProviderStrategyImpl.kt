@@ -6,6 +6,8 @@ import com.commitlens.commitlensapi.core.model.UnifiedFileDiffDto
 import com.commitlens.commitlensapi.core.model.UnifiedRawCommitDto
 import com.commitlens.commitlensapi.core.model.UnifiedRepoDto
 import com.commitlens.commitlensapi.core.parser.ConventionalCommitParser
+import com.commitlens.commitlensapi.exception.EmptySearchQueryException
+import com.commitlens.commitlensapi.exception.InvalidRequestParameterException
 import com.commitlens.commitlensapi.provider.GitProviderStrategy
 import com.commitlens.commitlensapi.provider.GitProviderType
 import com.commitlens.commitlensapi.provider.github.client.GitHubRestClient
@@ -37,6 +39,15 @@ class GitHubGitProviderStrategyImpl(
         query: String,
         limit: Int
     ): UnifiedCommitSearchResponseDto {
+
+        // Input validation
+        if (query.isBlank()) {
+            throw EmptySearchQueryException()
+        }
+        if (limit <= 0) {
+            throw InvalidRequestParameterException("'limit' must be a positive integer, got: $limit")
+        }
+
         val allCommits = mutableListOf<UnifiedRawCommitDto>() // List to hold all commits fetched across pages
         var currentPage = 1 // Start from the first page
         val perPage = 100 // GitHub API allows a maximum of 100 items per page
@@ -89,6 +100,11 @@ class GitHubGitProviderStrategyImpl(
         repo: String,
         sha: String
     ): UnifiedCommitDetailDto {
+        // Input validation
+        if (sha.isBlank()) {
+            throw InvalidRequestParameterException("'sha' must not be blank")
+        }
+
         val rawCommit = gitHubClient.getCommitDetail(owner, repo, sha)
         val parsed = conventionalCommitParser.parse(rawCommit.commit.message)
 
@@ -108,7 +124,7 @@ class GitHubGitProviderStrategyImpl(
                     additions = file.additions,
                     deletions = file.deletions,
                     changes = file.changes,
-//                    patch = file.patch
+                    // patch = file.patch
                 )
             }
         )
