@@ -1,7 +1,7 @@
 package com.commitlens.commitlensapi.api.controller
 
 import com.commitlens.commitlensapi.core.model.UnifiedCommitDetailDto
-import com.commitlens.commitlensapi.core.model.UnifiedRawCommitDto
+import com.commitlens.commitlensapi.core.model.UnifiedCommitSearchResponseDto
 import com.commitlens.commitlensapi.core.model.UnifiedRepoDto
 import com.commitlens.commitlensapi.provider.GitProviderFactory
 import com.commitlens.commitlensapi.provider.GitProviderType
@@ -31,9 +31,10 @@ class GitAnalysisController(
         @PathVariable owner: String,
         @PathVariable repo: String,
         @RequestParam query: String,
+        @RequestParam(defaultValue = "300") limit: Int,
         @RequestParam(defaultValue = "GITHUB") provider: GitProviderType
-    ): List<UnifiedRawCommitDto> {
-        return providerFactory.getStrategy(provider).searchCommits(owner, repo, query)
+    ): UnifiedCommitSearchResponseDto {
+        return providerFactory.getStrategy(provider).searchCommits(owner, repo, query, limit)
     }
 
     // Fetch and return detailed information about a specific commit in a repository of the specified Git provider (default is GitHub)

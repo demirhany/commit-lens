@@ -8,7 +8,6 @@ import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
-import tools.jackson.databind.ObjectMapper
 
 @Component
 class GitHubRestClient(
@@ -33,18 +32,20 @@ class GitHubRestClient(
     }
 
     // Search for commits in a specific repository based on the provided query (including substrings like "Jira key", "feat", etc.)
-    fun searchCommits(owner: String, repo: String, query: String): List<GitHubCommitItemDto> {
+    fun searchCommits(owner: String, repo: String, query: String, page: Int = 1, perPage: Int = 100): GitHubSearchCommitResponseDto? {
         return restClient.get()
             .uri { uriBuilder ->
                 uriBuilder.path("/search/commits")
                     .queryParam("q", "repo:$owner/$repo $query")
                     .queryParam("sort", "committer-date")
                     .queryParam("order", "desc")
+                    .queryParam("per_page", perPage)
+                    .queryParam("page", page)
                     .build()
             }
             .retrieve()
             // Deserialize the response into a GitHubSearchCommitResponseDto and return the list of commit items in that dto
-            .body(GitHubSearchCommitResponseDto::class.java)?.items ?: emptyList()
+            .body(GitHubSearchCommitResponseDto::class.java)
     }
 
     // Get the recent commits from a specific repository, with optional pagination parameters (page and perPage)
