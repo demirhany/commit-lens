@@ -25,7 +25,7 @@ export function useCommitSearch(): UseCommitSearchResult {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetchCommits(owner, repo, query, 100, "GITHUB");
+        const res = await fetchCommits(owner, repo, query, 300, "GITHUB");
         if (!res.success || !res.data) {
           setError(res.message ?? "Failed to search commits.");
           setCommits([]);

@@ -58,7 +58,7 @@ export function fetchCommits(
   owner: string,
   repo: string,
   query: string,
-  limit = 100,
+  limit = 300,
   provider: GitProvider = "GITHUB"
 ): Promise<ApiResponse<UnifiedCommitSearchResponse>> {
   const params = new URLSearchParams({
