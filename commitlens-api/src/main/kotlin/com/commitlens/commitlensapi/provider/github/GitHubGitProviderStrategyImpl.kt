@@ -64,7 +64,7 @@ class GitHubGitProviderStrategyImpl(
         while (allCommits.size < limit) {
 
             // Fetch commits from the GitHub API for the current page
-            val searchResponse = gitHubClient.searchCommits(owner, repo, exactQuery, currentPage, perPage) ?: break
+            val searchResponse = gitHubClient.searchCommits(owner, repo, exactQuery, currentPage, perPage)
             if (currentPage == 1) {
                 commitTotalCount = searchResponse.totalCount
             }
