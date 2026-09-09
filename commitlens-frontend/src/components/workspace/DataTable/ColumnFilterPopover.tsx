@@ -29,7 +29,7 @@ export function ColumnFilterPopover({
     <div
       ref={popoverRef}
       className={cn(
-        "absolute top-full mt-2 w-64 rounded-xl border border-zinc-800 bg-zinc-950 p-3 shadow-xl z-50",
+        "absolute top-full mt-2 w-64 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-3 shadow-xl shadow-zinc-900/10 dark:shadow-black/60 z-50 text-zinc-900 dark:text-zinc-100",
         align === "right" ? "right-0" : "left-0",
         "animate-in fade-in zoom-in-95 duration-150 cursor-default",
         className

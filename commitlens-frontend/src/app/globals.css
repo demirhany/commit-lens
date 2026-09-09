@@ -1,7 +1,20 @@
 @import "tailwindcss";
 
-/* ── Brand colour tokens (Zinc / Linear / Vercel Dark aesthetic) ─────────── */
+@variant dark (&:where(.dark, .dark *));
+
+/* ── Brand colour tokens ─────────────────────────────────────────────────── */
 :root {
+  --bg-canvas:     #fafafa;
+  --bg-surface:    #ffffff;
+  --bg-subtle:     #f4f4f5;
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --text-primary:  #09090b;
+  --text-secondary:#52525b;
+  --text-muted:    #a1a1aa;
+  --accent:        #6366f1;
+}
+
+.dark {
   --bg-canvas:     #09090b;
   --bg-surface:    #18181b;
   --bg-subtle:     #27272a;
@@ -35,11 +48,16 @@ body {
 /* ── Custom scrollbar ─────────────────────────────────────────────────────── */
 .custom-scrollbar {
   scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.dark .custom-scrollbar {
   scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
+  width: 5px;
+  height: 5px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -47,11 +65,19 @@ body {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.12);
+  background-color: rgba(0, 0, 0, 0.18);
   border-radius: 9999px;
 }
 
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: rgba(255, 255, 255, 0.2);
 }
 

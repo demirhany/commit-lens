@@ -56,7 +56,7 @@ export default function WorkspacePage() {
   }, []);
 
   return (
-    <div className="flex h-screen flex-col bg-zinc-950 text-zinc-100 overflow-hidden">
+    <div className="flex h-screen flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 overflow-hidden transition-colors">
       {/* Top navigation / search bar */}
       <WorkspaceHeader
         selectedRepo={selectedRepo}
@@ -77,7 +77,7 @@ export default function WorkspacePage() {
         />
 
         {/* Right panel — commit results */}
-        <main className="flex flex-1 flex-col overflow-hidden border-l border-zinc-800/60">
+        <main className="flex flex-1 flex-col overflow-hidden border-l border-zinc-200 dark:border-zinc-800/60">
           <CommitList
             commits={commits}
             totalCount={totalCount}

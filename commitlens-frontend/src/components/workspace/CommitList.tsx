@@ -17,18 +17,18 @@ import { ColumnFilterPopover } from "./DataTable/ColumnFilterPopover";
 
 // ─── Commit type → badge style ────────────────────────────────────────────────
 const TYPE_STYLES: Record<string, { pill: string; dot: string }> = {
-  feat: { pill: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20", dot: "bg-emerald-400" },
-  fix: { pill: "bg-amber-500/10   text-amber-400   border-amber-500/20", dot: "bg-amber-400" },
-  refactor: { pill: "bg-cyan-500/10    text-cyan-400    border-cyan-500/20", dot: "bg-cyan-400" },
-  perf: { pill: "bg-orange-500/10  text-orange-400  border-orange-500/20", dot: "bg-orange-400" },
-  test: { pill: "bg-violet-500/10  text-violet-400  border-violet-500/20", dot: "bg-violet-400" },
-  build: { pill: "bg-indigo-500/10  text-indigo-400  border-indigo-500/20", dot: "bg-indigo-400" },
-  ci: { pill: "bg-teal-500/10    text-teal-400    border-teal-500/20", dot: "bg-teal-400" },
-  revert: { pill: "bg-rose-500/10    text-rose-400    border-rose-500/20", dot: "bg-rose-400" },
+  feat: { pill: "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20", dot: "bg-emerald-500 dark:bg-emerald-400" },
+  fix: { pill: "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/20", dot: "bg-amber-500 dark:bg-amber-400" },
+  refactor: { pill: "bg-sky-50 dark:bg-cyan-500/10 text-sky-700 dark:text-cyan-400 border-sky-200 dark:border-cyan-500/20", dot: "bg-sky-500 dark:bg-cyan-400" },
+  perf: { pill: "bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-500/20", dot: "bg-orange-500 dark:bg-orange-400" },
+  test: { pill: "bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400 border-violet-200 dark:border-violet-500/20", dot: "bg-violet-500 dark:bg-violet-400" },
+  build: { pill: "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-500/20", dot: "bg-indigo-500 dark:bg-indigo-400" },
+  ci: { pill: "bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 border-teal-200 dark:border-teal-500/20", dot: "bg-teal-500 dark:bg-teal-400" },
+  revert: { pill: "bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/20", dot: "bg-rose-500 dark:bg-rose-400" },
 };
 
-const ZINC_PILL = "bg-zinc-800 text-zinc-300 border-zinc-700";
-const NON_CONV = "bg-zinc-900 text-zinc-500 border-dashed border-zinc-700";
+const ZINC_PILL = "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700";
+const NON_CONV = "bg-zinc-100/80 dark:bg-zinc-900 text-zinc-500 border-dashed border-zinc-300 dark:border-zinc-700";
 
 function TypeBadge({
   type,
@@ -58,7 +58,7 @@ function TypeBadge({
         {conv ? label : "raw"}
       </span>
       {breaking && (
-        <span className="inline-flex items-center rounded-full border border-rose-500/30 bg-rose-500/15 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-rose-400 whitespace-nowrap">
+        <span className="inline-flex items-center rounded-full border border-rose-300 dark:border-rose-500/30 bg-rose-100 dark:bg-rose-500/15 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-rose-700 dark:text-rose-400 whitespace-nowrap">
           !
         </span>
       )}
@@ -85,9 +85,9 @@ function CopySha({ sha }: { sha: string }) {
     <button
       onClick={copy}
       title={copied ? "Copied!" : "Copy SHA"}
-      className="flex h-5 w-5 items-center justify-center rounded transition-colors hover:bg-zinc-700/60 text-zinc-500 hover:text-zinc-300"
+      className="flex h-5 w-5 items-center justify-center rounded transition-colors hover:bg-zinc-200 dark:hover:bg-zinc-700/60 text-zinc-500 dark:text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300 cursor-pointer"
     >
-      {copied ? <Check size={11} className="text-emerald-400" /> : <Copy size={11} />}
+      {copied ? <Check size={11} className="text-emerald-600 dark:text-emerald-400" /> : <Copy size={11} />}
     </button>
   );
 }
@@ -106,13 +106,13 @@ function ColHeader({
     <button
       onClick={onClick}
       className={cn(
-        "flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider select-none transition-colors group relative w-full text-left",
-        isActive ? "text-indigo-400" : "text-zinc-500 hover:text-zinc-300"
+        "flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider select-none transition-colors group relative w-full text-left cursor-pointer",
+        isActive ? "text-indigo-600 dark:text-indigo-400 font-semibold" : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300"
       )}
     >
       {children}
       {isActive && (
-        <span className="absolute -left-3 top-1 h-1.5 w-1.5 rounded-full bg-indigo-500" />
+        <span className="absolute -left-3 top-1 h-1.5 w-1.5 rounded-full bg-indigo-600 dark:bg-indigo-500" />
       )}
       <Filter
         size={10}
@@ -347,15 +347,15 @@ export function CommitList({
   // ── Render States ──
   if (!hasSearched && !loading) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-5 px-8 text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-900/60">
-          <GitCommitHorizontal size={24} className="text-zinc-600" />
+      <div className="flex flex-1 flex-col items-center justify-center gap-5 px-8 text-center bg-zinc-50/50 dark:bg-zinc-950">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 shadow-xs">
+          <GitCommitHorizontal size={24} className="text-zinc-400 dark:text-zinc-600" />
         </div>
         <div>
-          <h3 className="mb-1.5 text-sm font-semibold text-zinc-300">
+          <h3 className="mb-1.5 text-sm font-semibold text-zinc-800 dark:text-zinc-300">
             {selectedRepo ? `Search commits in ${selectedRepo.name}` : "Select a repository"}
           </h3>
-          <p className="max-w-xs text-xs leading-relaxed text-zinc-600">
+          <p className="max-w-xs text-xs leading-relaxed text-zinc-500 dark:text-zinc-600">
             {selectedRepo
               ? "Search conventional commits, scopes, or Jira keys using the search bar above. Press Enter to run."
               : "Pick a repository from the left panel to get started."}
@@ -367,8 +367,8 @@ export function CommitList({
 
   if (error) {
     return (
-      <div className="flex flex-1 items-center justify-center px-8 text-center">
-        <p className="text-sm text-rose-400">{error}</p>
+      <div className="flex flex-1 items-center justify-center px-8 text-center bg-zinc-50/50 dark:bg-zinc-950">
+        <p className="text-sm text-rose-500 dark:text-rose-400">{error}</p>
       </div>
     );
   }
@@ -377,8 +377,8 @@ export function CommitList({
 
   if (loading) {
     return (
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <div className={`grid ${GRID_COLS} items-center gap-4 border-b border-white/5 bg-zinc-900/40 px-4 py-2`}>
+      <div className="flex flex-1 flex-col overflow-hidden bg-zinc-50/50 dark:bg-zinc-950">
+        <div className={`grid ${GRID_COLS} items-center gap-4 border-b border-zinc-200 dark:border-white/5 bg-zinc-100/80 dark:bg-zinc-900/40 px-4 py-2`}>
           {["Type", "Scope", "Description", "Jira", "SHA", "Author", "Date"].map((h) => (
             <div key={h} className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">{h}</div>
           ))}
@@ -394,9 +394,9 @@ export function CommitList({
 
   if (commits.length === 0) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 px-8 text-center">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/50">
-          <GitCommitHorizontal size={20} className="text-zinc-700" />
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 px-8 text-center bg-zinc-50/50 dark:bg-zinc-950">
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 shadow-xs">
+          <GitCommitHorizontal size={20} className="text-zinc-400 dark:text-zinc-700" />
         </div>
         <p className="text-sm text-zinc-500">No commits match your query.</p>
       </div>
@@ -404,7 +404,7 @@ export function CommitList({
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-zinc-950">
+    <div className="flex flex-1 flex-col overflow-hidden bg-white dark:bg-zinc-950 transition-colors">
       <FilterChips
         filters={activeChips}
         onClearAll={handleClearAll}
@@ -415,7 +415,7 @@ export function CommitList({
 
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Column headers */}
-        <div className={`grid ${GRID_COLS} items-center gap-4 border-b border-white/5 bg-zinc-900/40 px-6 py-2 sticky top-0 z-10`}>
+        <div className={`grid ${GRID_COLS} items-center gap-4 border-b border-zinc-200 dark:border-white/5 bg-zinc-100/80 dark:bg-zinc-900/40 px-6 py-2 sticky top-0 z-10 text-zinc-600 dark:text-zinc-400 backdrop-blur-xs`}>
           
           {/* TYPE */}
           <div className="relative">
@@ -428,12 +428,12 @@ export function CommitList({
             <ColumnFilterPopover isOpen={openPopover === "types"} onClose={() => setOpenPopover(null)}>
               <div className="max-h-64 overflow-y-auto custom-scrollbar flex flex-col gap-1.5">
                 {uniqueTypes.map(([val, count]) => (
-                  <label key={val} className="flex items-center gap-2 text-xs text-zinc-300 cursor-pointer hover:bg-zinc-900 p-1 rounded transition-colors">
+                  <label key={val} className="flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-900 p-1 rounded transition-colors">
                     <input
                       type="checkbox"
                       checked={filters.types.includes(val)}
                       onChange={() => toggleArrayFilter("types", val)}
-                      className="accent-indigo-500 rounded bg-zinc-900 border-zinc-700"
+                      className="accent-indigo-600 rounded bg-zinc-100 dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700"
                     />
                     <span className="flex-1 truncate">{val}</span>
                     <span className="text-[10px] text-zinc-500">({count})</span>
@@ -454,14 +454,14 @@ export function CommitList({
             <ColumnFilterPopover isOpen={openPopover === "scopes"} onClose={() => setOpenPopover(null)}>
               <div className="max-h-64 overflow-y-auto custom-scrollbar flex flex-col gap-1.5">
                 {uniqueScopes.map(([val, count]) => (
-                  <label key={val} className="flex items-center gap-2 text-xs text-zinc-300 cursor-pointer hover:bg-zinc-900 p-1 rounded transition-colors">
+                  <label key={val} className="flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-900 p-1 rounded transition-colors">
                     <input
                       type="checkbox"
                       checked={filters.scopes.includes(val)}
                       onChange={() => toggleArrayFilter("scopes", val)}
-                      className="accent-indigo-500 rounded bg-zinc-900 border-zinc-700"
+                      className="accent-indigo-600 rounded bg-zinc-100 dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700"
                     />
-                    <span className="flex-1 truncate">{val === "none" ? <i className="text-zinc-500">No scope</i> : val}</span>
+                    <span className="flex-1 truncate">{val === "none" ? <i className="text-zinc-400 dark:text-zinc-500">No scope</i> : val}</span>
                     <span className="text-[10px] text-zinc-500">({count})</span>
                   </label>
                 ))}
@@ -483,7 +483,7 @@ export function CommitList({
                 placeholder="Search description..."
                 value={filters.description}
                 onChange={(e) => setFilters((p) => ({ ...p, description: e.target.value }))}
-                className="w-full bg-zinc-900 border border-zinc-700 text-zinc-200 text-xs rounded-md px-2 py-1.5 outline-none focus:border-indigo-500/50"
+                className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-200 text-xs rounded-md px-2 py-1.5 outline-none focus:border-indigo-500/50"
               />
             </ColumnFilterPopover>
           </div>
@@ -497,34 +497,34 @@ export function CommitList({
               Jira
             </ColHeader>
             <ColumnFilterPopover isOpen={openPopover === "jiraKeys"} onClose={() => setOpenPopover(null)}>
-              <div className="mb-2 pb-2 border-b border-zinc-800 flex flex-col gap-1.5">
-                <label className="flex items-center gap-2 text-xs text-zinc-300 cursor-pointer hover:bg-zinc-900 p-1 rounded transition-colors">
+              <div className="mb-2 pb-2 border-b border-zinc-200 dark:border-zinc-800 flex flex-col gap-1.5">
+                <label className="flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-900 p-1 rounded transition-colors">
                   <input
                     type="checkbox"
                     checked={filters.hasJiraKey === true}
                     onChange={() => setFilters((p) => ({ ...p, hasJiraKey: p.hasJiraKey === true ? null : true, jiraKeys: [] }))}
-                    className="accent-indigo-500 rounded bg-zinc-900 border-zinc-700"
+                    className="accent-indigo-600 rounded bg-zinc-100 dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700"
                   />
                   Has Jira Key
                 </label>
-                <label className="flex items-center gap-2 text-xs text-zinc-300 cursor-pointer hover:bg-zinc-900 p-1 rounded transition-colors">
+                <label className="flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-900 p-1 rounded transition-colors">
                   <input
                     type="checkbox"
                     checked={filters.hasJiraKey === false}
                     onChange={() => setFilters((p) => ({ ...p, hasJiraKey: p.hasJiraKey === false ? null : false, jiraKeys: [] }))}
-                    className="accent-indigo-500 rounded bg-zinc-900 border-zinc-700"
+                    className="accent-indigo-600 rounded bg-zinc-100 dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700"
                   />
                   No Jira Key
                 </label>
               </div>
               <div className="max-h-48 overflow-y-auto custom-scrollbar flex flex-col gap-1.5">
                 {uniqueJiraKeys.map(([val, count]) => (
-                  <label key={val} className={`flex items-center gap-2 text-xs text-zinc-300 cursor-pointer hover:bg-zinc-900 p-1 rounded transition-colors ${filters.hasJiraKey !== null ? 'opacity-50 pointer-events-none' : ''}`}>
+                  <label key={val} className={`flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-900 p-1 rounded transition-colors ${filters.hasJiraKey !== null ? 'opacity-50 pointer-events-none' : ''}`}>
                     <input
                       type="checkbox"
                       checked={filters.jiraKeys.includes(val)}
                       onChange={() => toggleArrayFilter("jiraKeys", val)}
-                      className="accent-indigo-500 rounded bg-zinc-900 border-zinc-700"
+                      className="accent-indigo-600 rounded bg-zinc-100 dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700"
                       disabled={filters.hasJiraKey !== null}
                     />
                     <span className="flex-1 truncate">{val}</span>
@@ -549,7 +549,7 @@ export function CommitList({
                 placeholder="Prefix..."
                 value={filters.shaPrefix}
                 onChange={(e) => setFilters((p) => ({ ...p, shaPrefix: e.target.value }))}
-                className="w-full bg-zinc-900 border border-zinc-700 text-zinc-200 text-xs rounded-md px-2 py-1.5 outline-none focus:border-indigo-500/50"
+                className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-200 text-xs rounded-md px-2 py-1.5 outline-none focus:border-indigo-500/50"
               />
             </ColumnFilterPopover>
           </div>
@@ -565,12 +565,12 @@ export function CommitList({
             <ColumnFilterPopover isOpen={openPopover === "authors"} onClose={() => setOpenPopover(null)} align="right">
               <div className="max-h-64 overflow-y-auto custom-scrollbar flex flex-col gap-1.5">
                 {uniqueAuthors.map(([val, count]) => (
-                  <label key={val} className="flex items-center gap-2 text-xs text-zinc-300 cursor-pointer hover:bg-zinc-900 p-1 rounded transition-colors">
+                  <label key={val} className="flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-900 p-1 rounded transition-colors">
                     <input
                       type="checkbox"
                       checked={filters.authors.includes(val)}
                       onChange={() => toggleArrayFilter("authors", val)}
-                      className="accent-indigo-500 rounded bg-zinc-900 border-zinc-700"
+                      className="accent-indigo-600 rounded bg-zinc-100 dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700"
                     />
                     <span className="flex-1 truncate" title={val}>{val}</span>
                     <span className="text-[10px] text-zinc-500">({count})</span>
@@ -596,7 +596,7 @@ export function CommitList({
                     type="date"
                     value={filters.dateRange?.start || ""}
                     onChange={(e) => setFilters(p => ({ ...p, dateRange: { start: e.target.value, end: p.dateRange?.end || e.target.value } }))}
-                    className="w-full bg-zinc-900 border border-zinc-700 text-zinc-200 text-xs rounded-md px-2 py-1.5 outline-none focus:border-indigo-500/50"
+                    className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-200 text-xs rounded-md px-2 py-1.5 outline-none focus:border-indigo-500/50"
                   />
                 </div>
                 <div>
@@ -605,13 +605,13 @@ export function CommitList({
                     type="date"
                     value={filters.dateRange?.end || ""}
                     onChange={(e) => setFilters(p => ({ ...p, dateRange: { start: p.dateRange?.start || e.target.value, end: e.target.value } }))}
-                    className="w-full bg-zinc-900 border border-zinc-700 text-zinc-200 text-xs rounded-md px-2 py-1.5 outline-none focus:border-indigo-500/50"
+                    className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-200 text-xs rounded-md px-2 py-1.5 outline-none focus:border-indigo-500/50"
                   />
                 </div>
                 {filters.dateRange && (
                   <button
                     onClick={() => setFilters(p => ({ ...p, dateRange: null }))}
-                    className="mt-1 w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] py-1 rounded transition-colors"
+                    className="mt-1 w-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-[11px] py-1 rounded transition-colors cursor-pointer"
                   >
                     Clear Dates
                   </button>
@@ -650,9 +650,9 @@ export function CommitList({
                   }}
                   className={cn(
                     `group grid ${GRID_COLS} items-center gap-4`,
-                    "border-b border-white/5 px-6 py-2.5 cursor-pointer",
-                    "transition-colors duration-150 hover:bg-zinc-900/70",
-                    "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-zinc-600"
+                    "border-b border-zinc-100 dark:border-white/5 px-6 py-2.5 cursor-pointer",
+                    "transition-colors duration-150 hover:bg-zinc-100/70 dark:hover:bg-zinc-900/70",
+                    "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-indigo-500 dark:focus-visible:ring-zinc-600"
                   )}
                 >
                   {/* ── Col 1: Type badge + BREAKING ── */}
@@ -661,16 +661,16 @@ export function CommitList({
                   {/* ── Col 2: Scope ── */}
                   <div className="min-w-0">
                     {scope ? (
-                      <span className="truncate rounded bg-zinc-800/60 px-1.5 py-0.5 font-mono text-[11px] text-zinc-400">
+                      <span className="truncate rounded bg-zinc-100 dark:bg-zinc-800/60 border border-zinc-200 dark:border-transparent px-1.5 py-0.5 font-mono text-[11px] text-zinc-600 dark:text-zinc-400">
                         {scope}
                       </span>
                     ) : (
-                      <span className="text-xs text-zinc-700">—</span>
+                      <span className="text-xs text-zinc-400 dark:text-zinc-700">—</span>
                     )}
                   </div>
 
                   {/* ── Col 3: Description ── */}
-                  <p className="truncate text-sm font-medium text-zinc-200 group-hover:text-white transition-colors">
+                  <p className="truncate text-sm font-medium text-zinc-800 dark:text-zinc-200 group-hover:text-zinc-950 dark:group-hover:text-white transition-colors">
                     {displayDescription}
                   </p>
 
@@ -680,22 +680,22 @@ export function CommitList({
                       jiraKeys.slice(0, 2).map((key) => (
                         <span
                           key={key}
-                          className="inline-block rounded border border-indigo-500/20 bg-indigo-500/10 px-1.5 py-0.5 font-mono text-[11px] text-indigo-400"
+                          className="inline-block rounded border border-indigo-200 dark:border-indigo-500/20 bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 font-mono text-[11px] text-indigo-700 dark:text-indigo-400"
                         >
                           {key}
                         </span>
                       ))
                     ) : (
-                      <span className="text-xs text-zinc-700">—</span>
+                      <span className="text-xs text-zinc-400 dark:text-zinc-700">—</span>
                     )}
                     {jiraKeys.length > 2 && (
-                      <span className="text-[11px] text-zinc-600">+{jiraKeys.length - 2}</span>
+                      <span className="text-[11px] text-zinc-500 dark:text-zinc-600">+{jiraKeys.length - 2}</span>
                     )}
                   </div>
 
                   {/* ── Col 5: SHA + actions ── */}
                   <div className="flex items-center gap-1.5">
-                    <span className="font-mono text-xs text-zinc-400 group-hover:text-zinc-200 transition-colors">
+                    <span className="font-mono text-xs text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-200 transition-colors">
                       {shortSha(commit.sha)}
                     </span>
                     <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -707,7 +707,7 @@ export function CommitList({
                           rel="noopener noreferrer"
                           onClick={(e) => e.stopPropagation()}
                           title="Open on GitHub"
-                          className="flex h-5 w-5 items-center justify-center rounded text-zinc-500 transition-colors hover:bg-zinc-700/60 hover:text-zinc-300"
+                          className="flex h-5 w-5 items-center justify-center rounded text-zinc-400 dark:text-zinc-500 transition-colors hover:bg-zinc-200 dark:hover:bg-zinc-700/60 hover:text-zinc-800 dark:hover:text-zinc-300 cursor-pointer"
                         >
                           <ExternalLink size={11} />
                         </a>
@@ -717,16 +717,16 @@ export function CommitList({
 
                   {/* ── Col 6: Author ── */}
                   <div className="min-w-0 flex items-center gap-2">
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-bold text-indigo-400">
+                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-[10px] font-bold text-indigo-700 dark:text-indigo-400">
                       {authorName.charAt(0).toUpperCase()}
                     </div>
-                    <p className="truncate text-[11px] font-medium text-zinc-300">
+                    <p className="truncate text-[11px] font-medium text-zinc-700 dark:text-zinc-300">
                       {authorName}
                     </p>
                   </div>
 
                   {/* ── Col 7: Date ── */}
-                  <div className="min-w-0 text-[11px] text-zinc-500 tabular-nums">
+                  <div className="min-w-0 text-[11px] text-zinc-500 dark:text-zinc-500 tabular-nums">
                     {formatDate(commit.date)}
                   </div>
                 </div>

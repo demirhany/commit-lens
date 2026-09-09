@@ -58,8 +58,8 @@ export function Modal({
       {/* Panel */}
       <div
         className={cn(
-          "relative z-10 w-full rounded-2xl border border-zinc-800",
-          "bg-zinc-900/95 backdrop-blur-xl shadow-2xl text-zinc-100",
+          "relative z-10 w-full rounded-2xl border border-zinc-200 dark:border-zinc-800",
+          "bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl shadow-2xl text-zinc-900 dark:text-zinc-100",
           "animate-in fade-in-0 zoom-in-95 duration-200",
           SIZE_MAP[size],
           className
@@ -69,11 +69,11 @@ export function Modal({
       >
         {/* Header */}
         {title && (
-          <div className="flex items-start justify-between border-b border-zinc-800 px-6 py-4">
+          <div className="flex items-start justify-between border-b border-zinc-200 dark:border-zinc-800 px-6 py-4">
             <div className="flex-1 min-w-0">{title}</div>
             <button
               onClick={onClose}
-              className="ml-4 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-100"
+              className="ml-4 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-zinc-500 dark:text-zinc-400 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer"
               aria-label="Close modal"
             >
               <X size={16} />
