@@ -71,7 +71,7 @@ class GitHubGitProviderStrategyImpl(
             val mapped = items.map { item ->
                 UnifiedRawCommitDto(
                     sha = item.sha,
-                    message = item.commit.message,
+                    parsedMessage = conventionalCommitParser.parse(item.commit.message),
                     authorName = item.commit.author.name,
                     authorEmail = item.commit.author.email,
                     date = item.commit.author.date,
