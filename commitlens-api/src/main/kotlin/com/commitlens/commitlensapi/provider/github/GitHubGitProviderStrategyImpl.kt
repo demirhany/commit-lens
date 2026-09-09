@@ -48,6 +48,13 @@ class GitHubGitProviderStrategyImpl(
             throw InvalidRequestParameterException("'limit' must be a positive integer, got: $limit")
         }
 
+        val trimmedQuery = query.trim()
+        val exactQuery = if (trimmedQuery.startsWith("\"") && trimmedQuery.endsWith("\"")) {
+            trimmedQuery
+        } else {
+            "\"$trimmedQuery\""
+        }
+
         val allCommits = mutableListOf<UnifiedRawCommitDto>() // List to hold all commits fetched across pages
         var currentPage = 1 // Start from the first page
         val perPage = 100 // GitHub API allows a maximum of 100 items per page
@@ -57,7 +64,7 @@ class GitHubGitProviderStrategyImpl(
         while (allCommits.size < limit) {
 
             // Fetch commits from the GitHub API for the current page
-            val searchResponse = gitHubClient.searchCommits(owner, repo, query, currentPage, perPage) ?: break
+            val searchResponse = gitHubClient.searchCommits(owner, repo, exactQuery, currentPage, perPage) ?: break
             if (currentPage == 1) {
                 commitTotalCount = searchResponse.totalCount
             }
