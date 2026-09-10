@@ -12,8 +12,17 @@ import type { UnifiedRepo } from "@/lib/types";
 
 export default function WorkspacePage() {
   const { repos, loading: reposLoading, error: reposError, refetch } = useRepos();
-  const { commits, totalCount, loading: searchLoading, error: searchError, search, reset } =
-    useCommitSearch();
+  const {
+    commits,
+    totalCount,
+    hasMore,
+    loading: searchLoading,
+    isFetchingMore,
+    error: searchError,
+    search,
+    fetchMore,
+    reset,
+  } = useCommitSearch();
 
   const [selectedRepo, setSelectedRepo] = useState<UnifiedRepo | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
@@ -81,6 +90,9 @@ export default function WorkspacePage() {
           <CommitList
             commits={commits}
             totalCount={totalCount}
+            hasMore={hasMore}
+            isFetchingMore={isFetchingMore}
+            onFetchMore={fetchMore}
             loading={searchLoading}
             error={searchError}
             selectedRepo={selectedRepo}
