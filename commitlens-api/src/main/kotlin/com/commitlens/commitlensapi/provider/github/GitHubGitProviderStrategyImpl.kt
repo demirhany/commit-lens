@@ -33,6 +33,23 @@ class GitHubGitProviderStrategyImpl(
         }
     }
 
+    // Fetch and return detailed information about a specific repository from GitHub
+    override fun getRepo(
+        owner: String,
+        repo: String
+    ): UnifiedRepoDto {
+        val repoDetails = gitHubClient.getRepo(owner, repo)
+        return UnifiedRepoDto(
+            id = repoDetails.id.toString(),
+            name = repoDetails.name,
+            fullName = repoDetails.fullName,
+            owner = repoDetails.owner.login,
+            defaultBranch = repoDetails.defaultBranch,
+            isPrivate = repoDetails.isPrivate,
+            htmlUrl = repoDetails.htmlUrl
+        )
+    }
+
     override fun searchCommits(
         owner: String,
         repo: String,

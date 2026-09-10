@@ -27,6 +27,17 @@ class GitAnalysisController(
         return ApiResponse.success(data = repos)
     }
 
+    // Fetch and return detailed information about a specific repository from the specified Git provider (default is GitHub)
+    @GetMapping("/repos/{owner}/{repo}")
+    fun getRepo(
+        @PathVariable owner: String,
+        @PathVariable repo: String,
+        @RequestParam(defaultValue = "GITHUB") provider: GitProviderType
+    ): ApiResponse<UnifiedRepoDto> {
+        val repoDetails = providerFactory.getStrategy(provider).getRepo(owner, repo)
+        return ApiResponse.success(data = repoDetails)
+    }
+
     // Search for commits in a specific repository of the specified Git provider (default is GitHub)
     @GetMapping("/repos/{owner}/{repo}/commits")
     fun searchCommits(

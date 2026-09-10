@@ -31,6 +31,15 @@ class GitHubRestClient(
             ?: throw IllegalStateException("GitHub response body was empty when fetching user repositories")
     }
 
+    // Get details of a specific repository by owner and repo name
+    fun getRepo(owner: String, repo: String): GitHubRepoDto {
+        return restClient.get()
+            .uri("/repos/{owner}/{repo}", owner, repo)
+            .retrieve()
+            .body(GitHubRepoDto::class.java)
+            ?: throw IllegalStateException("GitHub response body was empty when fetching repository details for $owner/$repo")
+    }
+
     // Search for commits in a specific repository based on the provided query (including substrings like "Jira key", "feat", etc.)
     fun searchCommits(owner: String, repo: String, query: String, page: Int = 1, perPage: Int = 100): GitHubSearchCommitResponseDto {
         return restClient.get()

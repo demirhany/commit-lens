@@ -53,6 +53,17 @@ export function fetchRepos(
   );
 }
 
+/** GET /api/git-analysis/repos/{owner}/{repo}?provider={provider} */
+export function fetchRepo(
+  owner: string,
+  repo: string,
+  provider: GitProvider = "GITHUB"
+): Promise<ApiResponse<UnifiedRepo>> {
+  return apiFetch<UnifiedRepo>(
+    `/api/git-analysis/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}?provider=${provider}`
+  );
+}
+
 /** GET /api/git-analysis/repos/{owner}/{repo}/commits?query={q}&page={page}&perPage={perPage}&provider={provider} */
 export function fetchCommits(
   owner: string,
