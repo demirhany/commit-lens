@@ -33,10 +33,12 @@ class GitAnalysisController(
         @PathVariable owner: String,
         @PathVariable repo: String,
         @RequestParam query: String,
-        @RequestParam(defaultValue = "300") limit: Int,
+        @RequestParam(defaultValue = "1") page: Int,
+        @RequestParam(defaultValue = "100") perPage: Int,
+//        @RequestParam(defaultValue = "300") limit: Int,
         @RequestParam(defaultValue = "GITHUB") provider: GitProviderType
     ): ApiResponse<UnifiedCommitSearchResponseDto> {
-        val searchResult = providerFactory.getStrategy(provider).searchCommits(owner, repo, query, limit)
+        val searchResult = providerFactory.getStrategy(provider).searchCommits(owner, repo, query, page, perPage)
         return ApiResponse.success(data = searchResult)
     }
 

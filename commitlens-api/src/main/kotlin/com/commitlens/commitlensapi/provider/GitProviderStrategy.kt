@@ -8,6 +8,6 @@ interface GitProviderStrategy {
     val providerType: GitProviderType
 
     fun getRepos(): List<UnifiedRepoDto>
-    fun searchCommits(owner: String, repo: String, query: String, limit: Int = 300): UnifiedCommitSearchResponseDto
+    fun searchCommits(owner: String, repo: String, query: String, page: Int = 1, perPage: Int = 100): UnifiedCommitSearchResponseDto
     fun getCommitDetails(owner: String, repo: String, sha: String): UnifiedCommitDetailDto
 }
