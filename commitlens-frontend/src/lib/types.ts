@@ -33,7 +33,8 @@ export interface UnifiedRawCommit {
 // ─── Commit search response ───────────────────────────────────────────────────
 export interface UnifiedCommitSearchResponse {
   totalCount: number;
-  limit: number;
+  page: number;
+  perPage: number;
   items: UnifiedRawCommit[];
 }
 
