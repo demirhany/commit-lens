@@ -59,9 +59,15 @@ export function WorkspaceHeader({
       {/* Provider selector */}
       <div className="flex items-center gap-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-100/80 dark:bg-zinc-950/60 p-1 shrink-0">
         {/* GitHub — active */}
-        <button className="flex items-center gap-1.5 rounded-md bg-white dark:bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-900 dark:text-zinc-200 shadow-xs transition-colors">
+        <button
+          className="flex items-center gap-1.5 rounded-md bg-white dark:bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-900 dark:text-zinc-200 shadow-xs transition-colors"
+          title="GitHub API allows fetching up to 1000 past commits"
+        >
           <GitFork size={12} />
           GitHub
+          <span className="ml-0.5 rounded bg-zinc-100 dark:bg-zinc-700/80 px-1.5 py-0.5 text-[9px] font-semibold text-zinc-500 dark:text-zinc-400">
+            Max 1K
+          </span>
         </button>
         {/* Bitbucket — disabled */}
         <button

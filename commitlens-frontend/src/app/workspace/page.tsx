@@ -27,6 +27,8 @@ export default function WorkspacePage() {
   const [selectedRepo, setSelectedRepo] = useState<UnifiedRepo | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
   const [activeSha, setActiveSha] = useState<string | null>(null);
+  /** The last successfully submitted search query — used for body-match inference and highlight */
+  const [activeQuery, setActiveQuery] = useState("");
 
   // Show repo errors as toast
   useEffect(() => {
@@ -43,6 +45,7 @@ export default function WorkspacePage() {
       setSelectedRepo(repo);
       reset();
       setHasSearched(false);
+      setActiveQuery("");
     },
     [reset]
   );
@@ -51,6 +54,7 @@ export default function WorkspacePage() {
     async (query: string) => {
       if (!selectedRepo) return;
       setHasSearched(true);
+      setActiveQuery(query.trim());
       await search(selectedRepo.owner, selectedRepo.name, query);
     },
     [selectedRepo, search]
@@ -97,6 +101,7 @@ export default function WorkspacePage() {
             error={searchError}
             selectedRepo={selectedRepo}
             hasSearched={hasSearched}
+            activeQuery={activeQuery}
             onCommitClick={handleCommitClick}
           />
         </main>
@@ -106,6 +111,7 @@ export default function WorkspacePage() {
       <CommitDetailModal
         sha={activeSha}
         repo={selectedRepo}
+        activeQuery={activeQuery}
         onClose={handleModalClose}
       />
 

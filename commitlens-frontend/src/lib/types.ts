@@ -66,6 +66,8 @@ export interface UnifiedCommitDetail {
   authorEmail?: string | null;
   date?: string | null;
   parsedMessage?: ParsedCommitMessage | null;
+  /** Full raw commit message including body (only present in detail endpoint) */
+  rawMessage?: string | null;
   totalAdditions: number;
   totalDeletions: number;
   files: UnifiedFileDiff[];

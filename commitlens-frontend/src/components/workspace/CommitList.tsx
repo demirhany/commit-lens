@@ -163,6 +163,8 @@ interface CommitListProps {
   error: string | null;
   selectedRepo: UnifiedRepo | null;
   hasSearched: boolean;
+  /** Last submitted search query — used for body-match inference */
+  activeQuery: string;
   onCommitClick: (sha: string) => void;
 }
 
@@ -177,6 +179,7 @@ export function CommitList({
   error,
   selectedRepo,
   hasSearched,
+  activeQuery,
   onCommitClick,
 }: CommitListProps) {
   const [filters, setFilters] = useState<TableFilters>(defaultFilters);
@@ -416,7 +419,9 @@ export function CommitList({
     );
   }
 
-  if (error) {
+  // If there's an error but we already have commits (e.g. pagination error),
+  // we keep rendering the list and let the toast (in WorkspacePage) handle the error display.
+  if (error && commits.length === 0) {
     return (
       <div className="flex flex-1 items-center justify-center px-8 text-center bg-zinc-50/50 dark:bg-zinc-950">
         <p className="text-sm text-rose-500 dark:text-rose-400">{error}</p>
@@ -462,7 +467,7 @@ export function CommitList({
           <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-400 dark:bg-amber-500 text-white text-[10px] font-bold">!</span>
           <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300">
             <span className="font-semibold">{totalCount - commits.length} more commits</span> haven't been fetched yet.
-            Filters only apply to the <span className="font-semibold">{commits.length} loaded</span> commits — use{" "}
+            You can load commits up to <span className="font-semibold">1000 (GitHub API limit)</span>. Use{" "}
             <span className="font-semibold">"Next 100 commits"</span> below to load more.
           </p>
         </div>
@@ -703,6 +708,20 @@ export function CommitList({
                 const displayDescription = pm?.description || pm?.rawMessage || (commit as any).message || commit.sha.substring(0, 7);
                 const authorName = commit.authorName || "Unknown Author";
 
+                // ── Body-match inference ──────────────────────────────────────
+                // If activeQuery appears nowhere in the header fields, the match
+                // must have come from the commit body (unavailable in list items).
+                const isMatchedInBody = (() => {
+                  if (!activeQuery) return false;
+                  const q = activeQuery.toLowerCase();
+                  const inType = type.includes(q);
+                  const inScope = (scope ?? "").toLowerCase().includes(q);
+                  const inDesc = displayDescription.toLowerCase().includes(q);
+                  const inJira = jiraKeys.some((k) => k.toLowerCase().includes(q));
+                  const inSha = commit.sha.toLowerCase().includes(q);
+                  return !inType && !inScope && !inDesc && !inJira && !inSha;
+                })();
+
                 // Place sentinel 5 rows before the end of the visible slice
                 const isSentinelRow = idx === visibleCommits.length - 5;
 
@@ -726,13 +745,26 @@ export function CommitList({
                         "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-indigo-500 dark:focus-visible:ring-zinc-600"
                       )}
                     >
-                      {/* ── Col 1: Type badge + BREAKING ── */}
-                      <TypeBadge type={type} isConventional={isConventional} isBreakingChange={isBreaking} />
+                      {/* ── Col 1: Type badge + BREAKING + optional body-match badge ── */}
+                      <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+                        <TypeBadge type={type} isConventional={isConventional} isBreakingChange={isBreaking} />
+                        {isMatchedInBody && (
+                          <span
+                            title="Match found in commit body (full message not shown in list)"
+                            className="inline-flex items-center rounded-full border border-zinc-200 dark:border-zinc-700/60 bg-zinc-100/50 dark:bg-zinc-800/40 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400 whitespace-nowrap"
+                          >
+                            body match
+                          </span>
+                        )}
+                      </div>
 
                       {/* ── Col 2: Scope ── */}
                       <div className="min-w-0">
                         {scope ? (
-                          <span className="truncate rounded bg-zinc-100 dark:bg-zinc-800/60 border border-zinc-200 dark:border-transparent px-1.5 py-0.5 font-mono text-[11px] text-zinc-600 dark:text-zinc-400">
+                          <span
+                            title={scope}
+                            className="inline-block max-w-full truncate align-middle rounded bg-zinc-100 dark:bg-zinc-800/60 border border-zinc-200 dark:border-transparent px-1.5 py-0.5 font-mono text-[11px] text-zinc-600 dark:text-zinc-400"
+                          >
                             {scope}
                           </span>
                         ) : (
@@ -751,7 +783,8 @@ export function CommitList({
                           jiraKeys.slice(0, 2).map((key) => (
                             <span
                               key={key}
-                              className="inline-block rounded border border-indigo-200 dark:border-indigo-500/20 bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 font-mono text-[11px] text-indigo-700 dark:text-indigo-400"
+                              title={key}
+                              className="inline-block max-w-[80px] truncate align-middle rounded border border-indigo-200 dark:border-indigo-500/20 bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 font-mono text-[11px] text-indigo-700 dark:text-indigo-400"
                             >
                               {key}
                             </span>
@@ -837,13 +870,19 @@ export function CommitList({
             {/* Right: next page action */}
             <button
               onClick={onFetchMore}
-              disabled={isFetchingMore || !hasMore}
+              disabled={isFetchingMore || !hasMore || commits.length >= 1000}
+              title={commits.length >= 1000 ? "GitHub API limit reached (max 1000 commits)" : ""}
               className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-300 shadow-xs transition-all hover:border-indigo-400 hover:text-indigo-700 dark:hover:border-indigo-500 dark:hover:text-indigo-300 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
             >
               {isFetchingMore ? (
                 <>
                   <Loader2 size={12} className="animate-spin" />
                   Loading…
+                </>
+              ) : commits.length >= 1000 ? (
+                <>
+                  <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                  API Limit Reached
                 </>
               ) : !hasMore && totalCount > 0 ? (
                 <>

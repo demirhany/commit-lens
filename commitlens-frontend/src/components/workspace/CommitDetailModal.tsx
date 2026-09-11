@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import {
   ExternalLink,
   GitCommitHorizontal,
@@ -11,6 +11,7 @@ import {
   FileCode,
   AlertTriangle,
   Tag,
+  AlignLeft,
 } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Badge } from "@/components/ui/Badge";
@@ -23,6 +24,8 @@ import type { UnifiedRepo } from "@/lib/types";
 interface CommitDetailModalProps {
   sha: string | null;
   repo: UnifiedRepo | null;
+  /** Active search query for body highlight */
+  activeQuery: string;
   onClose: () => void;
 }
 
@@ -36,7 +39,61 @@ const FILE_STATUS_STYLES: Record<string, string> = {
   unchanged: "text-zinc-400 bg-zinc-800/60 border-zinc-700/50",
 };
 
-export function CommitDetailModal({ sha, repo, onClose }: CommitDetailModalProps) {
+// ─── Helper: split rawMessage into title line + body ──────────────────────────
+function splitRawMessage(raw?: string | null): {
+  title: string;
+  body: string | null;
+} {
+  if (!raw) return { title: "", body: null };
+  const newline = raw.indexOf("\n");
+  if (newline === -1) return { title: raw, body: null };
+  const title = raw.slice(0, newline).trim();
+  const body = raw.slice(newline + 1).trimEnd();
+  return { title, body: body.length > 0 ? body : null };
+}
+
+// ─── Helper: highlight query occurrences inside a plain-text string ───────────
+// Returns an array of React-renderable nodes (strings and <mark> spans).
+function HighlightedText({
+  text,
+  query,
+}: {
+  text: string;
+  query: string;
+}): React.ReactNode {
+  if (!query) return <>{text}</>;
+
+  const q = query.toLowerCase();
+  const parts: React.ReactNode[] = [];
+  let cursor = 0;
+
+  while (cursor < text.length) {
+    const idx = text.toLowerCase().indexOf(q, cursor);
+    if (idx === -1) {
+      parts.push(text.slice(cursor));
+      break;
+    }
+    if (idx > cursor) parts.push(text.slice(cursor, idx));
+    parts.push(
+      <mark
+        key={idx}
+        className="bg-yellow-400/25 dark:bg-yellow-500/20 text-yellow-800 dark:text-yellow-200 px-0.5 rounded not-italic"
+      >
+        {text.slice(idx, idx + q.length)}
+      </mark>
+    );
+    cursor = idx + q.length;
+  }
+
+  return <>{parts}</>;
+}
+
+export function CommitDetailModal({
+  sha,
+  repo,
+  activeQuery,
+  onClose,
+}: CommitDetailModalProps) {
   const { detail, loading, error, load, clear } = useCommitDetail();
 
   useEffect(() => {
@@ -60,8 +117,20 @@ export function CommitDetailModal({ sha, repo, onClose }: CommitDetailModalProps
   const scope = pm?.scope || null;
   const jiraKeys = pm?.jiraKeys ?? [];
   const files = detail?.files ?? [];
-  const displayDescription = pm?.description || pm?.rawMessage || (detail as any)?.message || (detail ? shortSha(detail.sha) : "");
+  const displayDescription =
+    pm?.description ||
+    pm?.rawMessage ||
+    (detail as any)?.message ||
+    (detail ? shortSha(detail.sha) : "");
   const authorName = detail?.authorName || "Unknown Author";
+
+  // ── Parse rawMessage body ───────────────────────────────────────────────────
+  // rawMessage is the full raw commit message from the detail endpoint.
+  // We split off the title (first line) and keep the body (remaining lines).
+  const { body: rawBody } = useMemo(
+    () => splitRawMessage(detail?.rawMessage),
+    [detail?.rawMessage]
+  );
 
   const modalTitle = (
     <div className="flex items-start gap-3 min-w-0">
@@ -102,12 +171,7 @@ export function CommitDetailModal({ sha, repo, onClose }: CommitDetailModalProps
   );
 
   return (
-    <Modal
-      open={!!sha}
-      onClose={handleClose}
-      title={modalTitle}
-      size="xl"
-    >
+    <Modal open={!!sha} onClose={handleClose} title={modalTitle} size="xl">
       {/* Error state */}
       {error && !loading && (
         <div className="flex items-center gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-600 dark:text-rose-400">
@@ -177,6 +241,21 @@ export function CommitDetailModal({ sha, repo, onClose }: CommitDetailModalProps
                   {key}
                 </Badge>
               ))}
+            </div>
+          )}
+
+          {/* ── Commit Body (rawMessage) ──────────────────────────────────── */}
+          {rawBody && (
+            <div>
+              <div className="mb-2 flex items-center gap-2">
+                <AlignLeft size={13} className="text-zinc-400 dark:text-zinc-500" />
+                <h4 className="text-xs font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
+                  Commit Body
+                </h4>
+              </div>
+              <pre className="whitespace-pre-wrap font-mono text-xs leading-relaxed text-zinc-700 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 p-3 rounded-lg overflow-x-auto custom-scrollbar">
+                <HighlightedText text={rawBody} query={activeQuery} />
+              </pre>
             </div>
           )}
 

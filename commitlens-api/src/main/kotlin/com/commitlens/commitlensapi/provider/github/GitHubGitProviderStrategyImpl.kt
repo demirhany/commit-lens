@@ -122,6 +122,7 @@ class GitHubGitProviderStrategyImpl(
             authorEmail = rawCommit.commit.author.email,
             date = rawCommit.commit.author.date,
             parsedMessage = parsed,
+            rawMessage = rawCommit.commit.message,
             totalAdditions = rawCommit.stats.additions,
             totalDeletions = rawCommit.stats.deletions,
             files = rawCommit.files.map { file ->
