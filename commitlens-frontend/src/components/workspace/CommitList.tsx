@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import {
   ExternalLink,
   GitCommitHorizontal,
@@ -8,6 +8,8 @@ import {
   Check,
   ChevronsUpDown,
   Filter,
+  Loader2,
+  ChevronDown,
 } from "lucide-react";
 import { cn, formatDate, shortSha } from "@/lib/utils";
 import { CommitRowSkeleton } from "@/components/ui/Skeleton";
@@ -151,10 +153,18 @@ const defaultFilters: TableFilters = {
 interface CommitListProps {
   commits: UnifiedRawCommit[];
   totalCount: number;
+  /** Whether there are more pages to fetch from the progressive pool */
+  hasMore: boolean;
+  /** True while a next-page request is in-flight */
+  isFetchingMore: boolean;
+  /** Trigger fetching the next page */
+  onFetchMore: () => void;
   loading: boolean;
   error: string | null;
   selectedRepo: UnifiedRepo | null;
   hasSearched: boolean;
+  /** Last submitted search query — used for body-match inference */
+  activeQuery: string;
   onCommitClick: (sha: string) => void;
 }
 
@@ -162,14 +172,29 @@ interface CommitListProps {
 export function CommitList({
   commits,
   totalCount,
+  hasMore,
+  isFetchingMore,
+  onFetchMore,
   loading,
   error,
   selectedRepo,
   hasSearched,
+  activeQuery,
   onCommitClick,
 }: CommitListProps) {
   const [filters, setFilters] = useState<TableFilters>(defaultFilters);
   const [openPopover, setOpenPopover] = useState<keyof TableFilters | null>(null);
+
+  // ── Progressive DOM Slicing ──────────────────────────────────────────────────
+  const SLICE_SIZE = 30;
+  const [visibleCount, setVisibleCount] = useState(SLICE_SIZE);
+  // Sentinel ref: placed near the bottom of the visible list
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  // Reset visibleCount whenever the pool (commits) changes (new search / pool grows)
+  useEffect(() => {
+    setVisibleCount(SLICE_SIZE);
+  }, [commits]);
 
   // ── Dynamic Options Extraction ──
   const uniqueTypes = useMemo(() => {
@@ -208,7 +233,7 @@ export function CommitList({
     return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
   }, [commits]);
 
-  // ── Client-side Filtering ──
+  // ── Client-side Filtering (over entire pool) ──
   const filteredCommits = useMemo(() => {
     return commits.filter((c) => {
       const pm = c.parsedMessage;
@@ -263,6 +288,35 @@ export function CommitList({
       return true;
     });
   }, [commits, filters]);
+
+  // ── DOM slice: only render the first visibleCount rows ──────────────────────
+  const visibleCommits = useMemo(
+    () => filteredCommits.slice(0, visibleCount),
+    [filteredCommits, visibleCount]
+  );
+
+  // Reset visible slice whenever filters change
+  useEffect(() => {
+    setVisibleCount(SLICE_SIZE);
+  }, [filters]);
+
+  // IntersectionObserver: when sentinel enters viewport, expand slice
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    if (visibleCount >= filteredCommits.length) return; // nothing more to reveal
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setVisibleCount((prev) => Math.min(prev + SLICE_SIZE, filteredCommits.length));
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [visibleCount, filteredCommits.length]);
 
   // ── Active Filters formatting for Chips ──
   const activeChips: ActiveFilter[] = useMemo(() => {
@@ -365,7 +419,9 @@ export function CommitList({
     );
   }
 
-  if (error) {
+  // If there's an error but we already have commits (e.g. pagination error),
+  // we keep rendering the list and let the toast (in WorkspacePage) handle the error display.
+  if (error && commits.length === 0) {
     return (
       <div className="flex flex-1 items-center justify-center px-8 text-center bg-zinc-50/50 dark:bg-zinc-950">
         <p className="text-sm text-rose-500 dark:text-rose-400">{error}</p>
@@ -405,6 +461,18 @@ export function CommitList({
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden bg-white dark:bg-zinc-950 transition-colors">
+      {/* ── Unfetched commits warning banner ── */}
+      {hasMore && (
+        <div className="flex shrink-0 items-center gap-2.5 border-b border-amber-200 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/8 px-5 py-2">
+          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-400 dark:bg-amber-500 text-white text-[10px] font-bold">!</span>
+          <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300">
+            <span className="font-semibold">{totalCount - commits.length} more commits</span> haven't been fetched yet.
+            You can load commits up to <span className="font-semibold">1000 (GitHub API limit)</span>. Use{" "}
+            <span className="font-semibold">"Next 100 commits"</span> below to load more.
+          </p>
+        </div>
+      )}
+
       <FilterChips
         filters={activeChips}
         onClearAll={handleClearAll}
@@ -628,112 +696,208 @@ export function CommitList({
                No commits match your filters.
              </div>
           ) : (
-            filteredCommits.map((commit) => {
-              const pm = commit.parsedMessage;
-              
-              const isConventional = pm?.isConventional ?? false;
-              const isBreaking = pm?.isBreakingChange ?? false;
-              const type = pm?.type?.toLowerCase() || "raw";
-              const scope = pm?.scope || null;
-              const jiraKeys = pm?.jiraKeys ?? [];
-              const displayDescription = pm?.description || pm?.rawMessage || (commit as any).message || commit.sha.substring(0, 7);
-              const authorName = commit.authorName || "Unknown Author";
+            <>
+              {visibleCommits.map((commit, idx) => {
+                const pm = commit.parsedMessage;
 
-              return (
-                <div
-                  key={commit.sha}
-                  role="row"
-                  tabIndex={0}
-                  onClick={() => onCommitClick(commit.sha)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") onCommitClick(commit.sha);
-                  }}
-                  className={cn(
-                    `group grid ${GRID_COLS} items-center gap-4`,
-                    "border-b border-zinc-100 dark:border-white/5 px-6 py-2.5 cursor-pointer",
-                    "transition-colors duration-150 hover:bg-zinc-100/70 dark:hover:bg-zinc-900/70",
-                    "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-indigo-500 dark:focus-visible:ring-zinc-600"
-                  )}
-                >
-                  {/* ── Col 1: Type badge + BREAKING ── */}
-                  <TypeBadge type={type} isConventional={isConventional} isBreakingChange={isBreaking} />
+                const isConventional = pm?.isConventional ?? false;
+                const isBreaking = pm?.isBreakingChange ?? false;
+                const type = pm?.type?.toLowerCase() || "raw";
+                const scope = pm?.scope || null;
+                const jiraKeys = pm?.jiraKeys ?? [];
+                const displayDescription = pm?.description || pm?.rawMessage || (commit as any).message || commit.sha.substring(0, 7);
+                const authorName = commit.authorName || "Unknown Author";
 
-                  {/* ── Col 2: Scope ── */}
-                  <div className="min-w-0">
-                    {scope ? (
-                      <span className="truncate rounded bg-zinc-100 dark:bg-zinc-800/60 border border-zinc-200 dark:border-transparent px-1.5 py-0.5 font-mono text-[11px] text-zinc-600 dark:text-zinc-400">
-                        {scope}
-                      </span>
-                    ) : (
-                      <span className="text-xs text-zinc-400 dark:text-zinc-700">—</span>
+                // ── Body-match inference ──────────────────────────────────────
+                // If activeQuery appears nowhere in the header fields, the match
+                // must have come from the commit body (unavailable in list items).
+                const isMatchedInBody = (() => {
+                  if (!activeQuery) return false;
+                  const q = activeQuery.toLowerCase();
+                  const inType = type.includes(q);
+                  const inScope = (scope ?? "").toLowerCase().includes(q);
+                  const inDesc = displayDescription.toLowerCase().includes(q);
+                  const inJira = jiraKeys.some((k) => k.toLowerCase().includes(q));
+                  const inSha = commit.sha.toLowerCase().includes(q);
+                  return !inType && !inScope && !inDesc && !inJira && !inSha;
+                })();
+
+                // Place sentinel 5 rows before the end of the visible slice
+                const isSentinelRow = idx === visibleCommits.length - 5;
+
+                return (
+                  <div key={commit.sha}>
+                    {/* Invisible sentinel element for IntersectionObserver */}
+                    {isSentinelRow && (
+                      <div ref={sentinelRef} aria-hidden="true" className="h-px w-full" />
                     )}
-                  </div>
-
-                  {/* ── Col 3: Description ── */}
-                  <p className="truncate text-sm font-medium text-zinc-800 dark:text-zinc-200 group-hover:text-zinc-950 dark:group-hover:text-white transition-colors">
-                    {displayDescription}
-                  </p>
-
-                  {/* ── Col 4: Jira keys ── */}
-                  <div className="flex min-w-0 flex-wrap gap-1">
-                    {jiraKeys.length > 0 ? (
-                      jiraKeys.slice(0, 2).map((key) => (
-                        <span
-                          key={key}
-                          className="inline-block rounded border border-indigo-200 dark:border-indigo-500/20 bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 font-mono text-[11px] text-indigo-700 dark:text-indigo-400"
-                        >
-                          {key}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-xs text-zinc-400 dark:text-zinc-700">—</span>
-                    )}
-                    {jiraKeys.length > 2 && (
-                      <span className="text-[11px] text-zinc-500 dark:text-zinc-600">+{jiraKeys.length - 2}</span>
-                    )}
-                  </div>
-
-                  {/* ── Col 5: SHA + actions ── */}
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-mono text-xs text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-200 transition-colors">
-                      {shortSha(commit.sha)}
-                    </span>
-                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <CopySha sha={commit.sha} />
-                      {commit.htmlUrl && (
-                        <a
-                          href={commit.htmlUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          title="Open on GitHub"
-                          className="flex h-5 w-5 items-center justify-center rounded text-zinc-400 dark:text-zinc-500 transition-colors hover:bg-zinc-200 dark:hover:bg-zinc-700/60 hover:text-zinc-800 dark:hover:text-zinc-300 cursor-pointer"
-                        >
-                          <ExternalLink size={11} />
-                        </a>
+                    <div
+                      role="row"
+                      tabIndex={0}
+                      onClick={() => onCommitClick(commit.sha)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") onCommitClick(commit.sha);
+                      }}
+                      className={cn(
+                        `group grid ${GRID_COLS} items-center gap-4`,
+                        "border-b border-zinc-100 dark:border-white/5 px-6 py-2.5 cursor-pointer",
+                        "transition-colors duration-150 hover:bg-zinc-100/70 dark:hover:bg-zinc-900/70",
+                        "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-indigo-500 dark:focus-visible:ring-zinc-600"
                       )}
+                    >
+                      {/* ── Col 1: Type badge + BREAKING + optional body-match badge ── */}
+                      <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+                        <TypeBadge type={type} isConventional={isConventional} isBreakingChange={isBreaking} />
+                        {isMatchedInBody && (
+                          <span
+                            title="Match found in commit body (full message not shown in list)"
+                            className="inline-flex items-center rounded-full border border-zinc-200 dark:border-zinc-700/60 bg-zinc-100/50 dark:bg-zinc-800/40 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400 whitespace-nowrap"
+                          >
+                            body match
+                          </span>
+                        )}
+                      </div>
+
+                      {/* ── Col 2: Scope ── */}
+                      <div className="min-w-0">
+                        {scope ? (
+                          <span
+                            title={scope}
+                            className="inline-block max-w-full truncate align-middle rounded bg-zinc-100 dark:bg-zinc-800/60 border border-zinc-200 dark:border-transparent px-1.5 py-0.5 font-mono text-[11px] text-zinc-600 dark:text-zinc-400"
+                          >
+                            {scope}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-zinc-400 dark:text-zinc-700">—</span>
+                        )}
+                      </div>
+
+                      {/* ── Col 3: Description ── */}
+                      <p className="truncate text-sm font-medium text-zinc-800 dark:text-zinc-200 group-hover:text-zinc-950 dark:group-hover:text-white transition-colors">
+                        {displayDescription}
+                      </p>
+
+                      {/* ── Col 4: Jira keys ── */}
+                      <div className="flex min-w-0 flex-wrap gap-1">
+                        {jiraKeys.length > 0 ? (
+                          jiraKeys.slice(0, 2).map((key) => (
+                            <span
+                              key={key}
+                              title={key}
+                              className="inline-block max-w-[80px] truncate align-middle rounded border border-indigo-200 dark:border-indigo-500/20 bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 font-mono text-[11px] text-indigo-700 dark:text-indigo-400"
+                            >
+                              {key}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs text-zinc-400 dark:text-zinc-700">—</span>
+                        )}
+                        {jiraKeys.length > 2 && (
+                          <span className="text-[11px] text-zinc-500 dark:text-zinc-600">+{jiraKeys.length - 2}</span>
+                        )}
+                      </div>
+
+                      {/* ── Col 5: SHA + actions ── */}
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-mono text-xs text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-200 transition-colors">
+                          {shortSha(commit.sha)}
+                        </span>
+                        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <CopySha sha={commit.sha} />
+                          {commit.htmlUrl && (
+                            <a
+                              href={commit.htmlUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              title="Open on GitHub"
+                              className="flex h-5 w-5 items-center justify-center rounded text-zinc-400 dark:text-zinc-500 transition-colors hover:bg-zinc-200 dark:hover:bg-zinc-700/60 hover:text-zinc-800 dark:hover:text-zinc-300 cursor-pointer"
+                            >
+                              <ExternalLink size={11} />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* ── Col 6: Author ── */}
+                      <div className="min-w-0 flex items-center gap-2">
+                        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-[10px] font-bold text-indigo-700 dark:text-indigo-400">
+                          {authorName.charAt(0).toUpperCase()}
+                        </div>
+                        <p className="truncate text-[11px] font-medium text-zinc-700 dark:text-zinc-300">
+                          {authorName}
+                        </p>
+                      </div>
+
+                      {/* ── Col 7: Date ── */}
+                      <div className="min-w-0 text-[11px] text-zinc-500 dark:text-zinc-500 tabular-nums">
+                        {formatDate(commit.date)}
+                      </div>
                     </div>
                   </div>
+                );
+              })}
 
-                  {/* ── Col 6: Author ── */}
-                  <div className="min-w-0 flex items-center gap-2">
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-[10px] font-bold text-indigo-700 dark:text-indigo-400">
-                      {authorName.charAt(0).toUpperCase()}
-                    </div>
-                    <p className="truncate text-[11px] font-medium text-zinc-700 dark:text-zinc-300">
-                      {authorName}
-                    </p>
-                  </div>
-
-                  {/* ── Col 7: Date ── */}
-                  <div className="min-w-0 text-[11px] text-zinc-500 dark:text-zinc-500 tabular-nums">
-                    {formatDate(commit.date)}
-                  </div>
-                </div>
-              );
-            })
+              {/* Bottom sentinel fallback (when list is shorter than 5 rows) */}
+              {visibleCommits.length < filteredCommits.length && (
+                <div ref={sentinelRef} aria-hidden="true" className="h-8 w-full" />
+              )}
+            </>
           )}
         </div>
+
+        {/* ── Progressive Pool Footer ── */}
+        {commits.length > 0 && (
+          <div className="flex shrink-0 items-center justify-between border-t border-zinc-200 dark:border-white/5 bg-zinc-50/80 dark:bg-zinc-900/40 px-6 py-2.5 transition-colors">
+            {/* Left: layered counters */}
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[12px] text-zinc-500 dark:text-zinc-500 tabular-nums">
+                Rendered{" "}
+                <span className="font-semibold text-zinc-800 dark:text-zinc-300">{visibleCommits.length}</span>
+                {" "}of{" "}
+                <span className="font-semibold text-zinc-800 dark:text-zinc-300">{filteredCommits.length}</span>
+                {" "}filtered
+                {filteredCommits.length !== commits.length && (
+                  <span className="text-zinc-400 dark:text-zinc-600">{" "}(from {commits.length} loaded)</span>
+                )}
+              </span>
+              <span className="text-[11px] text-zinc-400 dark:text-zinc-600 tabular-nums">
+                Total in repo:{" "}
+                <span className="font-medium text-zinc-500 dark:text-zinc-500">{totalCount}</span>
+              </span>
+            </div>
+
+            {/* Right: next page action */}
+            <button
+              onClick={onFetchMore}
+              disabled={isFetchingMore || !hasMore || commits.length >= 1000}
+              title={commits.length >= 1000 ? "GitHub API limit reached (max 1000 commits)" : ""}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-300 shadow-xs transition-all hover:border-indigo-400 hover:text-indigo-700 dark:hover:border-indigo-500 dark:hover:text-indigo-300 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+            >
+              {isFetchingMore ? (
+                <>
+                  <Loader2 size={12} className="animate-spin" />
+                  Loading…
+                </>
+              ) : commits.length >= 1000 ? (
+                <>
+                  <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                  API Limit Reached
+                </>
+              ) : !hasMore && totalCount > 0 ? (
+                <>
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  All loaded
+                </>
+              ) : (
+                <>
+                  <ChevronDown size={12} />
+                  Next 100 commits
+                </>
+              )}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

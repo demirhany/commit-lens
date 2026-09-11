@@ -33,7 +33,8 @@ export interface UnifiedRawCommit {
 // ─── Commit search response ───────────────────────────────────────────────────
 export interface UnifiedCommitSearchResponse {
   totalCount: number;
-  limit: number;
+  page: number;
+  perPage: number;
   items: UnifiedRawCommit[];
 }
 
@@ -65,6 +66,8 @@ export interface UnifiedCommitDetail {
   authorEmail?: string | null;
   date?: string | null;
   parsedMessage?: ParsedCommitMessage | null;
+  /** Full raw commit message including body (only present in detail endpoint) */
+  rawMessage?: string | null;
   totalAdditions: number;
   totalDeletions: number;
   files: UnifiedFileDiff[];

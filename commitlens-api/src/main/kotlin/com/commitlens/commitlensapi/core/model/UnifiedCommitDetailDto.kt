@@ -10,6 +10,7 @@ data class UnifiedCommitDetailDto(
     val authorEmail: String?,
     val date: Instant?,
     val parsedMessage: ParsedCommitMessageDto,
+    val rawMessage: String?,
     val totalAdditions: Int,
     val totalDeletions: Int,
     val files: List<UnifiedFileDiffDto>
