@@ -20,30 +20,34 @@ export interface UnifiedRepo {
 }
 
 // ─── Commit (list item) ───────────────────────────────────────────────────────
-// NOTE: backend updated — root `message` removed; parsed data comes via parsedMessage
 export interface UnifiedRawCommit {
   sha: string;
-  parsedMessage?: ParsedCommitMessage | null;
+  message?: string | null;
   authorName: string;
   authorEmail?: string | null;
   date?: string | null; // Instant serialised as ISO string
   htmlUrl?: string | null;
 }
 
+export interface UnifiedParsedCommit {
+  rawCommitDto: UnifiedRawCommit;
+  parsedMessage?: ParsedCommitMessage | null;
+}
+
 // ─── Commit search response ───────────────────────────────────────────────────
 export interface UnifiedCommitSearchResponse {
-  totalCount: number;
+  totalCount?: number | null;
   page: number;
   perPage: number;
-  items: UnifiedRawCommit[];
+  items: UnifiedParsedCommit[];
 }
 
 // ─── Parsed conventional commit message ──────────────────────────────────────
 export interface ParsedCommitMessage {
-  rawMessage?: string | null;
+  rawMessage: string;
   type?: string | null;
   scope?: string | null;
-  description?: string | null;
+  description: string;
   isBreakingChange?: boolean | null;
   isConventional?: boolean | null;
   jiraKeys?: string[] | null;
@@ -60,14 +64,7 @@ export interface UnifiedFileDiff {
 
 // ─── Commit detail ────────────────────────────────────────────────────────────
 export interface UnifiedCommitDetail {
-  sha: string;
-  htmlUrl?: string | null;
-  authorName: string;
-  authorEmail?: string | null;
-  date?: string | null;
-  parsedMessage?: ParsedCommitMessage | null;
-  /** Full raw commit message including body (only present in detail endpoint) */
-  rawMessage?: string | null;
+  parsedCommitDto: UnifiedParsedCommit;
   totalAdditions: number;
   totalDeletions: number;
   files: UnifiedFileDiff[];

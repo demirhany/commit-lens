@@ -110,7 +110,9 @@ export function CommitDetailModal({
     onClose();
   };
 
-  const pm = detail?.parsedMessage;
+  const parsedCommit = detail?.parsedCommitDto;
+  const pm = parsedCommit?.parsedMessage;
+  const raw = parsedCommit?.rawCommitDto;
   const isConventional = pm?.isConventional ?? false;
   const isBreaking = pm?.isBreakingChange ?? false;
   const type = pm?.type?.toLowerCase() || "raw";
@@ -120,16 +122,15 @@ export function CommitDetailModal({
   const displayDescription =
     pm?.description ||
     pm?.rawMessage ||
-    (detail as any)?.message ||
-    (detail ? shortSha(detail.sha) : "");
-  const authorName = detail?.authorName || "Unknown Author";
+    raw?.message ||
+    (raw ? shortSha(raw.sha) : "");
+  const authorName = raw?.authorName || "Unknown Author";
 
-  // ── Parse rawMessage body ───────────────────────────────────────────────────
-  // rawMessage is the full raw commit message from the detail endpoint.
+  // ── Parse message body ──────────────────────────────────────────────────────
   // We split off the title (first line) and keep the body (remaining lines).
   const { body: rawBody } = useMemo(
-    () => splitRawMessage(detail?.rawMessage),
-    [detail?.rawMessage]
+    () => splitRawMessage(raw?.message),
+    [raw?.message]
   );
 
   const modalTitle = (
@@ -155,7 +156,7 @@ export function CommitDetailModal({
               <span className="text-xs text-zinc-600 dark:text-zinc-400">({scope})</span>
             )}
             <code className="rounded bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 font-mono text-[11px] text-zinc-700 dark:text-zinc-300">
-              {detail ? shortSha(detail.sha) : ""}
+              {raw ? shortSha(raw.sha) : ""}
             </code>
           </div>
         )}
@@ -211,17 +212,17 @@ export function CommitDetailModal({
             <span className="flex items-center gap-1.5">
               <User size={12} className="text-zinc-400 dark:text-zinc-500" />
               <span className="text-zinc-800 dark:text-zinc-200 font-medium">{authorName}</span>
-              {detail.authorEmail && (
-                <span className="text-zinc-400 dark:text-zinc-500">&lt;{detail.authorEmail}&gt;</span>
+              {raw?.authorEmail && (
+                <span className="text-zinc-400 dark:text-zinc-500">&lt;{raw.authorEmail}&gt;</span>
               )}
             </span>
             <span className="flex items-center gap-1.5">
               <Calendar size={12} className="text-zinc-400 dark:text-zinc-500" />
-              {formatFullDate(detail.date)}
+              {formatFullDate(raw?.date)}
             </span>
-            {detail.htmlUrl && (
+            {raw?.htmlUrl && (
               <a
-                href={detail.htmlUrl}
+                href={raw.htmlUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
