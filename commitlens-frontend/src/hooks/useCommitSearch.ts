@@ -2,13 +2,13 @@
 
 import { useState, useCallback, useRef } from "react";
 import { fetchCommits } from "@/lib/api";
-import type { UnifiedRawCommit } from "@/lib/types";
+import type { UnifiedParsedCommit } from "@/lib/types";
 
 const PER_PAGE = 100;
 
 interface UseCommitSearchResult {
   /** Cumulative pool of all fetched commits */
-  commits: UnifiedRawCommit[];
+  commits: UnifiedParsedCommit[];
   totalCount: number;
   /** Current page index (1-based) that was last fetched */
   currentPage: number;
@@ -26,7 +26,7 @@ interface UseCommitSearchResult {
 }
 
 export function useCommitSearch(): UseCommitSearchResult {
-  const [commits, setCommits] = useState<UnifiedRawCommit[]>([]);
+  const [commits, setCommits] = useState<UnifiedParsedCommit[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(0);
   const [loading, setLoading] = useState(false);

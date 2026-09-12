@@ -1,11 +1,10 @@
-package com.commitlens.commitlensapi.core.model
+package com.commitlens.commitlensapi.core.model.commit.raw
 
-import com.commitlens.commitlensapi.core.parser.ParsedCommitMessageDto
 import java.time.Instant
 
 data class UnifiedRawCommitDto(
     val sha: String,
-    val parsedMessage: ParsedCommitMessageDto,
+    val message: String?,
     val authorName: String,
     val authorEmail: String?,
     val date: Instant?,

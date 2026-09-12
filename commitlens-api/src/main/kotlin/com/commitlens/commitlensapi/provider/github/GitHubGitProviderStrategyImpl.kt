@@ -1,22 +1,17 @@
 package com.commitlens.commitlensapi.provider.github
 
-import com.commitlens.commitlensapi.core.model.UnifiedCommitDetailDto
-import com.commitlens.commitlensapi.core.model.UnifiedCommitSearchResponseDto
+import com.commitlens.commitlensapi.core.model.commit.raw.UnifiedRawCommitDetailDto
 import com.commitlens.commitlensapi.core.model.UnifiedFileDiffDto
-import com.commitlens.commitlensapi.core.model.UnifiedRawCommitDto
+import com.commitlens.commitlensapi.core.model.commit.raw.UnifiedRawCommitDto
 import com.commitlens.commitlensapi.core.model.UnifiedRepoDto
-import com.commitlens.commitlensapi.core.parser.ConventionalCommitParser
-import com.commitlens.commitlensapi.exception.EmptySearchQueryException
-import com.commitlens.commitlensapi.exception.InvalidRequestParameterException
+import com.commitlens.commitlensapi.core.model.commit.raw.UnifiedRawCommitSearchResponseDto
 import com.commitlens.commitlensapi.provider.GitProviderStrategy
 import com.commitlens.commitlensapi.provider.GitProviderType
 import com.commitlens.commitlensapi.provider.github.client.GitHubRestClient
 import org.springframework.stereotype.Component
 
 @Component
-class GitHubGitProviderStrategyImpl(
-    private val gitHubClient: GitHubRestClient, private val conventionalCommitParser: ConventionalCommitParser
-) : GitProviderStrategy {
+class GitHubGitProviderStrategyImpl(private val gitHubClient: GitHubRestClient) : GitProviderStrategy {
     override val providerType: GitProviderType = GitProviderType.GITHUB
 
     override fun getRepos(): List<UnifiedRepoDto> {
@@ -56,23 +51,9 @@ class GitHubGitProviderStrategyImpl(
         query: String,
         page: Int,
         perPage: Int
-    ): UnifiedCommitSearchResponseDto {
+    ): UnifiedRawCommitSearchResponseDto {
 
-        // Input validation
-        if (query.isBlank()) {
-            throw EmptySearchQueryException()
-        }
-        if (page <= 0) {
-            throw InvalidRequestParameterException("'page' must be a positive integer, got: $page")
-        }
-        if (perPage <= 0) {
-            throw InvalidRequestParameterException("'perPage' must be a positive integer, got: $perPage")
-        }
-
-        if (perPage > 100) {
-            throw InvalidRequestParameterException("'perPage' must not exceed 100, got: $perPage")
-        }
-
+        // Query sanitization: GitHub's search API requires exact phrase matching for commit messages, so we wrap the query in double quotes if it's not already.
         val trimmedQuery = query.trim()
         val exactQuery = if (trimmedQuery.startsWith("\"") && trimmedQuery.endsWith("\"")) {
             trimmedQuery
@@ -80,25 +61,26 @@ class GitHubGitProviderStrategyImpl(
             "\"$trimmedQuery\""
         }
 
+        // Search commits using the GitHub client
         val searchResponse = gitHubClient.searchCommits(owner, repo, exactQuery, page, perPage)
         val items = searchResponse.items
-        val mapped = items.map { item ->
-            UnifiedRawCommitDto(
-                sha = item.sha,
-                parsedMessage = conventionalCommitParser.parse(item.commit.message),
-                authorName = item.commit.author.name,
-                authorEmail = item.commit.author.email,
-                date = item.commit.author.date,
-                htmlUrl = item.htmlUrl
-            )
-        }
+        val totalCount = searchResponse.totalCount
 
-        // Return only the number of commits up to the specified limit
-        return UnifiedCommitSearchResponseDto(
-            totalCount = searchResponse.totalCount,
+        // Map the raw commit data from GitHub to the unified commit DTO format
+        return UnifiedRawCommitSearchResponseDto(
+            totalCount = totalCount,
             page = page,
             perPage = perPage,
-            items = mapped
+            items = items.map { item ->
+                UnifiedRawCommitDto(
+                    sha = item.sha,
+                    message = item.commit.message,
+                    authorName = item.commit.author.name,
+                    authorEmail = item.commit.author.email,
+                    date = item.commit.author.date,
+                    htmlUrl = item.htmlUrl
+                )
+            }
         )
     }
 
@@ -106,23 +88,18 @@ class GitHubGitProviderStrategyImpl(
         owner: String,
         repo: String,
         sha: String
-    ): UnifiedCommitDetailDto {
-        // Input validation
-        if (sha.isBlank()) {
-            throw InvalidRequestParameterException("'sha' must not be blank")
-        }
-
+    ): UnifiedRawCommitDetailDto {
         val rawCommit = gitHubClient.getCommitDetail(owner, repo, sha)
-        val parsed = conventionalCommitParser.parse(rawCommit.commit.message)
 
-        return UnifiedCommitDetailDto(
-            sha = rawCommit.sha,
-            htmlUrl = rawCommit.htmlUrl,
-            authorName = rawCommit.commit.author.name,
-            authorEmail = rawCommit.commit.author.email,
-            date = rawCommit.commit.author.date,
-            parsedMessage = parsed,
-            rawMessage = rawCommit.commit.message,
+        return UnifiedRawCommitDetailDto(
+            UnifiedRawCommitDto(
+                sha = rawCommit.sha,
+                message = rawCommit.commit.message,
+                authorName = rawCommit.commit.author.name,
+                authorEmail = rawCommit.commit.author.email,
+                date = rawCommit.commit.author.date,
+                htmlUrl = rawCommit.htmlUrl
+            ),
             totalAdditions = rawCommit.stats.additions,
             totalDeletions = rawCommit.stats.deletions,
             files = rawCommit.files.map { file ->
@@ -132,10 +109,8 @@ class GitHubGitProviderStrategyImpl(
                     additions = file.additions,
                     deletions = file.deletions,
                     changes = file.changes,
-                    // patch = file.patch
                 )
             }
         )
     }
-
 }

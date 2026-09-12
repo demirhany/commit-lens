@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { cn, formatDate, shortSha } from "@/lib/utils";
 import { CommitRowSkeleton } from "@/components/ui/Skeleton";
-import type { UnifiedRawCommit, UnifiedRepo } from "@/lib/types";
+import type { UnifiedParsedCommit, UnifiedRepo } from "@/lib/types";
 import { FilterChips, ActiveFilter } from "./DataTable/FilterChips";
 import { ColumnFilterPopover } from "./DataTable/ColumnFilterPopover";
 
@@ -151,7 +151,7 @@ const defaultFilters: TableFilters = {
 };
 
 interface CommitListProps {
-  commits: UnifiedRawCommit[];
+  commits: UnifiedParsedCommit[];
   totalCount: number;
   /** Whether there are more pages to fetch from the progressive pool */
   hasMore: boolean;
@@ -227,7 +227,7 @@ export function CommitList({
   const uniqueAuthors = useMemo(() => {
     const map = new Map<string, number>();
     commits.forEach((c) => {
-      const author = c.authorName || "Unknown Author";
+      const author = c.rawCommitDto.authorName || "Unknown Author";
       map.set(author, (map.get(author) || 0) + 1);
     });
     return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
@@ -252,7 +252,7 @@ export function CommitList({
 
       // Description
       if (filters.description) {
-        const desc = (pm?.description || pm?.rawMessage || (c as any).message || c.sha).toLowerCase();
+        const desc = (pm?.description || pm?.rawMessage || c.rawCommitDto.message || c.rawCommitDto.sha).toLowerCase();
         if (!desc.includes(filters.description.toLowerCase())) return false;
       }
 
@@ -267,19 +267,19 @@ export function CommitList({
       }
 
       // SHA
-      if (filters.shaPrefix && !c.sha.toLowerCase().startsWith(filters.shaPrefix.toLowerCase())) {
+      if (filters.shaPrefix && !c.rawCommitDto.sha.toLowerCase().startsWith(filters.shaPrefix.toLowerCase())) {
         return false;
       }
 
       // Author
       if (filters.authors.length > 0) {
-        const author = c.authorName || "Unknown Author";
+        const author = c.rawCommitDto.authorName || "Unknown Author";
         if (!filters.authors.includes(author)) return false;
       }
 
       // Date Range
-      if (filters.dateRange && c.date) {
-        const cDate = new Date(c.date).getTime();
+      if (filters.dateRange && c.rawCommitDto.date) {
+        const cDate = new Date(c.rawCommitDto.date).getTime();
         const start = new Date(filters.dateRange.start).getTime();
         const end = new Date(filters.dateRange.end).setHours(23, 59, 59, 999);
         if (cDate < start || cDate > end) return false;
@@ -699,14 +699,15 @@ export function CommitList({
             <>
               {visibleCommits.map((commit, idx) => {
                 const pm = commit.parsedMessage;
+                const raw = commit.rawCommitDto;
 
                 const isConventional = pm?.isConventional ?? false;
                 const isBreaking = pm?.isBreakingChange ?? false;
                 const type = pm?.type?.toLowerCase() || "raw";
                 const scope = pm?.scope || null;
                 const jiraKeys = pm?.jiraKeys ?? [];
-                const displayDescription = pm?.description || pm?.rawMessage || (commit as any).message || commit.sha.substring(0, 7);
-                const authorName = commit.authorName || "Unknown Author";
+                const displayDescription = pm?.description || pm?.rawMessage || raw.message || raw.sha.substring(0, 7);
+                const authorName = raw.authorName || "Unknown Author";
 
                 // ── Body-match inference ──────────────────────────────────────
                 // If activeQuery appears nowhere in the header fields, the match
@@ -718,7 +719,7 @@ export function CommitList({
                   const inScope = (scope ?? "").toLowerCase().includes(q);
                   const inDesc = displayDescription.toLowerCase().includes(q);
                   const inJira = jiraKeys.some((k) => k.toLowerCase().includes(q));
-                  const inSha = commit.sha.toLowerCase().includes(q);
+                  const inSha = raw.sha.toLowerCase().includes(q);
                   return !inType && !inScope && !inDesc && !inJira && !inSha;
                 })();
 
@@ -726,7 +727,7 @@ export function CommitList({
                 const isSentinelRow = idx === visibleCommits.length - 5;
 
                 return (
-                  <div key={commit.sha}>
+                  <div key={raw.sha}>
                     {/* Invisible sentinel element for IntersectionObserver */}
                     {isSentinelRow && (
                       <div ref={sentinelRef} aria-hidden="true" className="h-px w-full" />
@@ -734,9 +735,9 @@ export function CommitList({
                     <div
                       role="row"
                       tabIndex={0}
-                      onClick={() => onCommitClick(commit.sha)}
+                      onClick={() => onCommitClick(raw.sha)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") onCommitClick(commit.sha);
+                        if (e.key === "Enter" || e.key === " ") onCommitClick(raw.sha);
                       }}
                       className={cn(
                         `group grid ${GRID_COLS} items-center gap-4`,
@@ -800,13 +801,13 @@ export function CommitList({
                       {/* ── Col 5: SHA + actions ── */}
                       <div className="flex items-center gap-1.5">
                         <span className="font-mono text-xs text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-200 transition-colors">
-                          {shortSha(commit.sha)}
+                          {shortSha(raw.sha)}
                         </span>
                         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <CopySha sha={commit.sha} />
-                          {commit.htmlUrl && (
+                          <CopySha sha={raw.sha} />
+                          {raw.htmlUrl && (
                             <a
-                              href={commit.htmlUrl}
+                              href={raw.htmlUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
@@ -831,7 +832,7 @@ export function CommitList({
 
                       {/* ── Col 7: Date ── */}
                       <div className="min-w-0 text-[11px] text-zinc-500 dark:text-zinc-500 tabular-nums">
-                        {formatDate(commit.date)}
+                        {formatDate(raw.date)}
                       </div>
                     </div>
                   </div>
