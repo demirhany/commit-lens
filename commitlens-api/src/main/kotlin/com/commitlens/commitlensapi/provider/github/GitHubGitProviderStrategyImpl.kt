@@ -5,13 +5,14 @@ import com.commitlens.commitlensapi.core.model.UnifiedFileDiffDto
 import com.commitlens.commitlensapi.core.model.commit.raw.UnifiedRawCommitDto
 import com.commitlens.commitlensapi.core.model.UnifiedRepoDto
 import com.commitlens.commitlensapi.core.model.commit.raw.UnifiedRawCommitSearchResponseDto
-import com.commitlens.commitlensapi.provider.GitProviderStrategy
 import com.commitlens.commitlensapi.provider.GitProviderType
+import com.commitlens.commitlensapi.provider.RepositoryAwareGitProvider
+import com.commitlens.commitlensapi.provider.SearchableGitProviderStrategy
 import com.commitlens.commitlensapi.provider.github.client.GitHubRestClient
 import org.springframework.stereotype.Component
 
 @Component
-class GitHubGitProviderStrategyImpl(private val gitHubClient: GitHubRestClient) : GitProviderStrategy {
+class GitHubGitProviderStrategyImpl(private val gitHubClient: GitHubRestClient) : SearchableGitProviderStrategy, RepositoryAwareGitProvider{
     override val providerType: GitProviderType = GitProviderType.GITHUB
 
     override fun getRepos(): List<UnifiedRepoDto> {
