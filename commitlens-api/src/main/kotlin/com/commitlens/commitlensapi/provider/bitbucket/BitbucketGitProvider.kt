@@ -3,7 +3,7 @@ package com.commitlens.commitlensapi.provider.bitbucket
 import com.commitlens.commitlensapi.core.model.UnifiedFileDiffDto
 import com.commitlens.commitlensapi.core.model.commit.raw.UnifiedRawCommitDetailDto
 import com.commitlens.commitlensapi.core.model.commit.raw.UnifiedRawCommitDto
-import com.commitlens.commitlensapi.provider.GitProviderStrategy
+import com.commitlens.commitlensapi.provider.GitProvider
 import com.commitlens.commitlensapi.provider.GitProviderType
 import com.commitlens.commitlensapi.provider.bitbucket.client.BitbucketRestClient
 import com.commitlens.commitlensapi.provider.bitbucket.model.BitbucketAuthorDto
@@ -11,9 +11,9 @@ import com.commitlens.commitlensapi.provider.bitbucket.model.BitbucketCommitDto
 import org.springframework.stereotype.Component
 
 @Component
-class BitbucketGitProviderStrategyImpl(
+class BitbucketGitProvider(
     private val bitbucketRestClient: BitbucketRestClient
-) : GitProviderStrategy {
+) : GitProvider {
     override val providerType = GitProviderType.BITBUCKET
 
     override fun getCommitDetails(

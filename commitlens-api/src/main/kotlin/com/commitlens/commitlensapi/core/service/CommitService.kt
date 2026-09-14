@@ -11,7 +11,7 @@ import com.commitlens.commitlensapi.exception.ProviderCapabilityNotSupportedExce
 import com.commitlens.commitlensapi.provider.GitProviderFactory
 import com.commitlens.commitlensapi.provider.GitProviderType
 import com.commitlens.commitlensapi.provider.RepositoryAwareGitProvider
-import com.commitlens.commitlensapi.provider.SearchableGitProviderStrategy
+import com.commitlens.commitlensapi.provider.SearchableGitProvider
 import com.commitlens.commitlensapi.provider.model.GitProviderMetadataDto
 import org.springframework.stereotype.Service
 
@@ -65,7 +65,7 @@ class CommitService (private val gitProviderFactory: GitProviderFactory, private
         // Get the appropriate strategy based on the Git provider type
         val strategy = gitProviderFactory.getStrategy(gitProviderType)
 
-        if (strategy !is SearchableGitProviderStrategy) {
+        if (strategy !is SearchableGitProvider) {
             throw ProviderCapabilityNotSupportedException("The provider '$gitProviderType' does not support searching commits.")
         }
 
