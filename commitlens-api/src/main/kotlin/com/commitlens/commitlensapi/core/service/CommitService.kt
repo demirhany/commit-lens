@@ -7,20 +7,41 @@ import com.commitlens.commitlensapi.core.model.UnifiedRepoDto
 import com.commitlens.commitlensapi.core.parser.ConventionalCommitParser
 import com.commitlens.commitlensapi.exception.EmptySearchQueryException
 import com.commitlens.commitlensapi.exception.InvalidRequestParameterException
+import com.commitlens.commitlensapi.exception.ProviderCapabilityNotSupportedException
 import com.commitlens.commitlensapi.provider.GitProviderFactory
 import com.commitlens.commitlensapi.provider.GitProviderType
+import com.commitlens.commitlensapi.provider.RepositoryAwareGitProvider
+import com.commitlens.commitlensapi.provider.SearchableGitProvider
+import com.commitlens.commitlensapi.provider.model.GitProviderMetadataDto
 import org.springframework.stereotype.Service
 
 @Service
 class CommitService (private val gitProviderFactory: GitProviderFactory, private val conventionalCommitParser: ConventionalCommitParser) {
 
+    fun getSupportedProviders(): List<GitProviderMetadataDto> {
+        return GitProviderType.entries.map { providerType ->
+            val strategy = gitProviderFactory.getStrategy(providerType)
+            GitProviderMetadataDto(
+                provider = providerType,
+                displayName = providerType.name.lowercase().replaceFirstChar { it.uppercase() },
+                capabilities = strategy.capabilities
+            )
+        }
+    }
+
     fun getRepos(gitProviderType: GitProviderType): List<UnifiedRepoDto> {
         val strategy = gitProviderFactory.getStrategy(gitProviderType)
+        if (strategy !is RepositoryAwareGitProvider) {
+            throw ProviderCapabilityNotSupportedException("The provider '$gitProviderType' does not support listing repositories.")
+        }
         return strategy.getRepos()
     }
 
     fun getRepo(owner: String, repo: String, gitProviderType: GitProviderType): UnifiedRepoDto {
         val strategy = gitProviderFactory.getStrategy(gitProviderType)
+        if (strategy !is RepositoryAwareGitProvider) {
+            throw ProviderCapabilityNotSupportedException("The provider '$gitProviderType' does not support fetching repository details.")
+        }
         return strategy.getRepo(owner, repo)
     }
 
@@ -43,6 +64,10 @@ class CommitService (private val gitProviderFactory: GitProviderFactory, private
 
         // Get the appropriate strategy based on the Git provider type
         val strategy = gitProviderFactory.getStrategy(gitProviderType)
+
+        if (strategy !is SearchableGitProvider) {
+            throw ProviderCapabilityNotSupportedException("The provider '$gitProviderType' does not support searching commits.")
+        }
 
         // Search for commits using the strategy
         val searchResponse = strategy.searchCommits(owner, repo, query, page, perPage)

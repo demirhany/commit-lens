@@ -21,3 +21,6 @@ class InvalidRequestParameterException(message: String) : BaseApiException(messa
 // The commit search query is blank or effectively empty.
 class EmptySearchQueryException(message: String = "Search query must not be blank") :
     BaseApiException(message, HttpStatus.BAD_REQUEST)
+
+// The requested feature is not supported by the selected Git provider.
+class ProviderCapabilityNotSupportedException(message: String) : BaseApiException(message, HttpStatus.BAD_REQUEST)

@@ -6,6 +6,7 @@ import com.commitlens.commitlensapi.core.model.UnifiedRepoDto
 import com.commitlens.commitlensapi.core.model.base.ApiResponse
 import com.commitlens.commitlensapi.core.service.CommitService
 import com.commitlens.commitlensapi.provider.GitProviderType
+import com.commitlens.commitlensapi.provider.model.GitProviderMetadataDto
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
@@ -17,6 +18,12 @@ import org.springframework.web.bind.annotation.RestController
 class GitAnalysisController(
     private val commitService: CommitService
 ) {
+
+    @GetMapping("/providers")
+    fun getSupportedProviders(): ApiResponse<List<GitProviderMetadataDto>> {
+        val supportedProviders = commitService.getSupportedProviders()
+        return ApiResponse.success(data = supportedProviders)
+    }
 
     // Fetch and return a list of repositories from the specified Git provider (default is GitHub)
     @GetMapping("/repos")
