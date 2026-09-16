@@ -13,9 +13,10 @@ import {
 } from "lucide-react";
 import { cn, formatDate, shortSha } from "@/lib/utils";
 import { CommitRowSkeleton } from "@/components/ui/Skeleton";
-import type { UnifiedParsedCommit, UnifiedRepo } from "@/lib/types";
+import type { UnifiedParsedCommit, UnifiedRepo, JiraCommitContext } from "@/lib/types";
 import { FilterChips, ActiveFilter } from "./DataTable/FilterChips";
 import { ColumnFilterPopover } from "./DataTable/ColumnFilterPopover";
+import { AnalyticsDashboard } from "./Analytics/AnalyticsDashboard";
 
 // ─── Commit type → badge style ────────────────────────────────────────────────
 const TYPE_STYLES: Record<string, { pill: string; dot: string }> = {
@@ -206,6 +207,11 @@ interface CommitListProps {
    * Built in WorkspacePage from jiraContextMap. Enables the Provider column + filter.
    */
   providerMap?: Map<string, string>;
+  /**
+   * Jira mode only — full context map (owner, repo, provider) per SHA.
+   * Forwarded to AnalyticsDashboard for the Repo Footprint chart.
+   */
+  jiraContextMap?: Map<string, JiraCommitContext>;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -223,6 +229,7 @@ export function CommitList({
   onCommitClick,
   isJiraMode = false,
   providerMap,
+  jiraContextMap,
 }: CommitListProps) {
   const [filters, setFilters] = useState<TableFilters>(defaultFilters);
   const [openPopover, setOpenPopover] = useState<keyof TableFilters | null>(null);
@@ -544,7 +551,8 @@ export function CommitList({
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden bg-white dark:bg-zinc-950 transition-colors">
-      {/* ── Unfetched commits warning banner ── */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col relative">
+        {/* ── Unfetched commits warning banner ── */}
       {hasMore && (
         <div className="flex shrink-0 items-center gap-2.5 border-b border-amber-200 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/8 px-5 py-2">
           <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-400 dark:bg-amber-500 text-white text-[10px] font-bold">!</span>
@@ -556,6 +564,13 @@ export function CommitList({
         </div>
       )}
 
+      {/* ── Analytics Dashboard (KPI + Charts) — operates on unfiltered pool ── */}
+      <AnalyticsDashboard
+        commits={commits}
+        isJiraMode={isJiraMode}
+        jiraContextMap={jiraContextMap}
+      />
+
       <FilterChips
         filters={activeChips}
         onClearAll={handleClearAll}
@@ -564,7 +579,7 @@ export function CommitList({
         hasConventionalCommits={commits.some((c) => c.parsedMessage?.isConventional)}
       />
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-col">
         {/* Column headers */}
         <div className={`grid ${GRID_COLS} items-center gap-4 border-b border-zinc-200 dark:border-white/5 bg-zinc-100/80 dark:bg-zinc-900/40 px-6 py-2 sticky top-0 z-10 text-zinc-600 dark:text-zinc-400 backdrop-blur-xs`}>
           
@@ -809,7 +824,7 @@ export function CommitList({
         </div>
 
         {/* Rows */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar relative">
+        <div className="relative">
           {filteredCommits.length === 0 ? (
              <div className="flex h-32 items-center justify-center text-sm text-zinc-500">
                No commits match your filters.
@@ -980,9 +995,11 @@ export function CommitList({
             </>
           )}
         </div>
+      </div>
+      </div>
 
-        {/* ── Progressive Pool Footer ── */}
-        {commits.length > 0 && (
+      {/* ── Progressive Pool Footer ── */}
+      {commits.length > 0 && (
           <div className="flex shrink-0 items-center justify-between border-t border-zinc-200 dark:border-white/5 bg-zinc-50/80 dark:bg-zinc-900/40 px-6 py-2.5 transition-colors">
             {/* Left: layered counters */}
             <div className="flex flex-col gap-0.5">
@@ -1042,7 +1059,6 @@ export function CommitList({
             )}
           </div>
         )}
-      </div>
     </div>
   );
 }
