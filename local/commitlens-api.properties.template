@@ -1,3 +1,11 @@
 github.base-url=
 github.token=
 app.cors.allowed-origins=
+
+bitbucket.base-url=
+bitbucket.token=
+bitbucket.workspace=
+
+jira.base-url=
+jira.email=
+jira.token=
