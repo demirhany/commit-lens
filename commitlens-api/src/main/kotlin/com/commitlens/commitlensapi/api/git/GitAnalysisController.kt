@@ -1,4 +1,4 @@
-package com.commitlens.commitlensapi.api.controller
+package com.commitlens.commitlensapi.api.git
 
 import com.commitlens.commitlensapi.core.model.commit.parsed.UnifiedCommitSearchResponseDto
 import com.commitlens.commitlensapi.core.model.commit.parsed.UnifiedParsedCommitDetailDto
