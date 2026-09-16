@@ -61,7 +61,7 @@ class BitbucketGitProvider(
         val displayName = author.user?.displayName
         val emailRegex = Regex("<(.*?)>")
         val email = emailRegex.find(author.raw)?.groupValues?.get(1)
-        val name = displayName ?: author.raw.substringBefore("<").trim()
+        val name = displayName ?: author.raw.substringBefore("<").trim().ifEmpty { author.raw }
         return Pair(name.ifBlank { "Unknown" }, email)
     }
 }
