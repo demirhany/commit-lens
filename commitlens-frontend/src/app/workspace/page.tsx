@@ -190,6 +190,7 @@ export default function WorkspacePage() {
             onCommitClick={handleCommitClick}
             isJiraMode={searchMode === "jira"}
             providerMap={searchMode === "jira" ? buildProviderMap(jiraContextMap) : undefined}
+            jiraContextMap={searchMode === "jira" ? jiraContextMap : undefined}
           />
         </main>
       </div>
