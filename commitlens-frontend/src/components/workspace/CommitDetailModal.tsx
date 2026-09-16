@@ -19,7 +19,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { formatFullDate, shortSha } from "@/lib/utils";
 import { useCommitDetail } from "@/hooks/useCommitDetail";
 import { cn } from "@/lib/utils";
-import type { UnifiedRepo } from "@/lib/types";
+import type { GitProvider, UnifiedRepo } from "@/lib/types";
 
 interface CommitDetailModalProps {
   sha: string | null;
@@ -27,6 +27,10 @@ interface CommitDetailModalProps {
   /** Active search query for body highlight */
   activeQuery: string;
   onClose: () => void;
+  /** Jira mode: pass owner/repo/provider explicitly (overrides repo object) */
+  owner?: string;
+  repoName?: string;
+  provider?: GitProvider;
 }
 
 const FILE_STATUS_STYLES: Record<string, string> = {
@@ -93,17 +97,25 @@ export function CommitDetailModal({
   repo,
   activeQuery,
   onClose,
+  owner: ownerProp,
+  repoName: repoNameProp,
+  provider: providerProp,
 }: CommitDetailModalProps) {
   const { detail, loading, error, load, clear } = useCommitDetail();
 
+  // Resolve owner/repo/provider — Jira props take priority over repo object
+  const resolvedOwner = ownerProp ?? repo?.owner;
+  const resolvedRepo = repoNameProp ?? repo?.name;
+  const resolvedProvider = providerProp ?? "GITHUB";
+
   useEffect(() => {
-    if (sha && repo) {
-      load(repo.owner, repo.name, sha);
+    if (sha && resolvedOwner && resolvedRepo) {
+      load(resolvedOwner, resolvedRepo, sha, resolvedProvider);
     } else {
       clear();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sha, repo]);
+  }, [sha, resolvedOwner, resolvedRepo, resolvedProvider]);
 
   const handleClose = () => {
     clear();
@@ -228,7 +240,7 @@ export function CommitDetailModal({
                 className="flex items-center gap-1 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
               >
                 <ExternalLink size={11} />
-                View on GitHub
+                View on {resolvedProvider === "BITBUCKET" ? "Bitbucket" : "GitHub"}
               </a>
             )}
           </div>

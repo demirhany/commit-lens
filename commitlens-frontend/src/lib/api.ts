@@ -4,6 +4,7 @@ import type {
   UnifiedRepo,
   UnifiedCommitSearchResponse,
   UnifiedCommitDetail,
+  JiraIssueCommitResponseDto,
 } from "./types";
 
 const BASE_URL =
@@ -94,4 +95,24 @@ export function fetchCommitDetail(
   return apiFetch<UnifiedCommitDetail>(
     `/api/git-analysis/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/commits/${sha}?provider=${provider}`
   );
+}
+
+/** GET /api/jira/issues/{issueKey}/commits */
+export async function fetchJiraIssueCommits(
+  issueKey: string
+): Promise<JiraIssueCommitResponseDto> {
+  const res = await apiFetch<JiraIssueCommitResponseDto>(
+    `/api/jira/issues/${encodeURIComponent(issueKey.trim().toUpperCase())}/commits`
+  );
+
+  if (!res.success || !res.data) {
+    if (res.status === 404) {
+      throw new Error(`"${issueKey.toUpperCase()}" Jira bileti bulunamadı.`);
+    }
+    throw new Error(
+      res.message ?? "Jira commit'leri yüklenirken bir sunucu hatası oluştu."
+    );
+  }
+
+  return res.data;
 }

@@ -2,13 +2,13 @@
 
 import { useState, useCallback } from "react";
 import { fetchCommitDetail } from "@/lib/api";
-import type { UnifiedCommitDetail } from "@/lib/types";
+import type { GitProvider, UnifiedCommitDetail } from "@/lib/types";
 
 interface UseCommitDetailResult {
   detail: UnifiedCommitDetail | null;
   loading: boolean;
   error: string | null;
-  load: (owner: string, repo: string, sha: string) => Promise<void>;
+  load: (owner: string, repo: string, sha: string, provider?: GitProvider) => Promise<void>;
   clear: () => void;
 }
 
@@ -18,11 +18,11 @@ export function useCommitDetail(): UseCommitDetailResult {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(
-    async (owner: string, repo: string, sha: string) => {
+    async (owner: string, repo: string, sha: string, provider: GitProvider = "GITHUB") => {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetchCommitDetail(owner, repo, sha, "GITHUB");
+        const res = await fetchCommitDetail(owner, repo, sha, provider);
         if (!res.success || !res.data) {
           setError(res.message ?? "Failed to load commit details.");
         } else {

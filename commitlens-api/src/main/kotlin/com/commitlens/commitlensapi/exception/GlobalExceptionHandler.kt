@@ -73,12 +73,12 @@ class GlobalExceptionHandler {
     fun handleHttpClientErrorException(ex: HttpClientErrorException): ResponseEntity<ApiResponse<Unit>> {
         val statusCode = ex.statusCode
         val customMessage = when (statusCode) {
-            HttpStatus.NOT_FOUND -> "Resource not found on the Git provider"
-            HttpStatus.UNAUTHORIZED -> "Unauthorized access to Git provider — check your token"
-            HttpStatus.FORBIDDEN -> "Access forbidden by Git provider"
-            HttpStatus.TOO_MANY_REQUESTS -> "Git provider rate limit exceeded — please retry later"
-            HttpStatus.UNPROCESSABLE_CONTENT -> "Git provider rejected the request — check query parameters"
-            else -> ex.statusText.ifBlank { "An error occurred while communicating with the Git provider" }
+            HttpStatus.NOT_FOUND -> "Resource not found on the provider"
+            HttpStatus.UNAUTHORIZED -> "Unauthorized access to the provider — check your token"
+            HttpStatus.FORBIDDEN -> "Access forbidden by the provider"
+            HttpStatus.TOO_MANY_REQUESTS -> "Provider rate limit exceeded — please retry later"
+            HttpStatus.UNPROCESSABLE_CONTENT -> "Provider rejected the request — check query parameters"
+            else -> ex.statusText.ifBlank { "An error occurred while communicating with the provider" }
         }
         val errorResponse = ApiResponse.error(
             status = ex.statusCode.value(),

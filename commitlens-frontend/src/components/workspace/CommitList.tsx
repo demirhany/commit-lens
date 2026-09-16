@@ -32,6 +32,37 @@ const TYPE_STYLES: Record<string, { pill: string; dot: string }> = {
 const ZINC_PILL = "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700";
 const NON_CONV = "bg-zinc-100/80 dark:bg-zinc-900 text-zinc-500 border-dashed border-zinc-300 dark:border-zinc-700";
 
+// ─── Provider badge ───────────────────────────────────────────────────────────
+const PROVIDER_STYLES: Record<string, { pill: string; dot: string; label: string }> = {
+  GITHUB: {
+    pill: "bg-zinc-100 dark:bg-zinc-800/80 text-zinc-600 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700",
+    dot: "bg-zinc-500 dark:bg-zinc-400",
+    label: "GitHub",
+  },
+  BITBUCKET: {
+    pill: "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/25",
+    dot: "bg-blue-500 dark:bg-blue-400",
+    label: "Bitbucket",
+  },
+};
+
+function ProviderBadge({ provider }: { provider: string }) {
+  const style = PROVIDER_STYLES[provider.toUpperCase()] ?? {
+    pill: ZINC_PILL,
+    dot: "bg-zinc-400",
+    label: provider,
+  };
+  return (
+    <span
+      title={style.label}
+      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium tracking-wide whitespace-nowrap ${style.pill}`}
+    >
+      <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${style.dot}`} />
+      {style.label}
+    </span>
+  );
+}
+
 function TypeBadge({
   type,
   isConventional,
@@ -137,6 +168,7 @@ export interface TableFilters {
   shaPrefix: string;
   authors: string[];
   dateRange: { start: string; end: string } | null;
+  providers: string[];
 }
 
 const defaultFilters: TableFilters = {
@@ -148,6 +180,7 @@ const defaultFilters: TableFilters = {
   shaPrefix: "",
   authors: [],
   dateRange: null,
+  providers: [],
 };
 
 interface CommitListProps {
@@ -166,6 +199,13 @@ interface CommitListProps {
   /** Last submitted search query — used for body-match inference */
   activeQuery: string;
   onCommitClick: (sha: string) => void;
+  /** When true, hides GitHub-specific pagination UI and shows Jira-appropriate messages */
+  isJiraMode?: boolean;
+  /**
+   * Jira mode only — maps commit SHA → provider string (e.g. 'GITHUB' | 'BITBUCKET').
+   * Built in WorkspacePage from jiraContextMap. Enables the Provider column + filter.
+   */
+  providerMap?: Map<string, string>;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -181,6 +221,8 @@ export function CommitList({
   hasSearched,
   activeQuery,
   onCommitClick,
+  isJiraMode = false,
+  providerMap,
 }: CommitListProps) {
   const [filters, setFilters] = useState<TableFilters>(defaultFilters);
   const [openPopover, setOpenPopover] = useState<keyof TableFilters | null>(null);
@@ -232,6 +274,17 @@ export function CommitList({
     });
     return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
   }, [commits]);
+
+  // Dynamic providers — derived from providerMap (only in Jira mode)
+  const uniqueProviders = useMemo(() => {
+    if (!providerMap) return [];
+    const map = new Map<string, number>();
+    commits.forEach((c) => {
+      const provider = providerMap.get(c.rawCommitDto.sha);
+      if (provider) map.set(provider, (map.get(provider) || 0) + 1);
+    });
+    return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
+  }, [commits, providerMap]);
 
   // ── Client-side Filtering (over entire pool) ──
   const filteredCommits = useMemo(() => {
@@ -285,9 +338,15 @@ export function CommitList({
         if (cDate < start || cDate > end) return false;
       }
 
+      // Provider (Jira mode only)
+      if (filters.providers.length > 0 && providerMap) {
+        const provider = providerMap.get(c.rawCommitDto.sha);
+        if (!provider || !filters.providers.includes(provider)) return false;
+      }
+
       return true;
     });
-  }, [commits, filters]);
+  }, [commits, filters, providerMap]);
 
   // ── DOM slice: only render the first visibleCount rows ──────────────────────
   const visibleCommits = useMemo(
@@ -382,6 +441,13 @@ export function CommitList({
         onRemove: () => setFilters((prev) => ({ ...prev, dateRange: null })),
       });
     }
+    if (filters.providers.length > 0) {
+      chips.push({
+        key: "providers",
+        label: `Provider: ${filters.providers.join(", ")}`,
+        onRemove: () => setFilters((prev) => ({ ...prev, providers: [] })),
+      });
+    }
     return chips;
   }, [filters]);
 
@@ -407,10 +473,16 @@ export function CommitList({
         </div>
         <div>
           <h3 className="mb-1.5 text-sm font-semibold text-zinc-800 dark:text-zinc-300">
-            {selectedRepo ? `Search commits in ${selectedRepo.name}` : "Select a repository"}
+            {isJiraMode
+              ? "Jira bilet kodu ile commit ara"
+              : selectedRepo
+              ? `Search commits in ${selectedRepo.name}`
+              : "Select a repository"}
           </h3>
           <p className="max-w-xs text-xs leading-relaxed text-zinc-500 dark:text-zinc-600">
-            {selectedRepo
+            {isJiraMode
+              ? "Yukarıdaki alana KAN-4 gibi bir Jira bilet kodu girin ve Enter'a basın."
+              : selectedRepo
               ? "Search conventional commits, scopes, or Jira keys using the search bar above. Press Enter to run."
               : "Pick a repository from the left panel to get started."}
           </p>
@@ -429,13 +501,20 @@ export function CommitList({
     );
   }
 
-  const GRID_COLS = "grid-cols-[140px_80px_1fr_120px_88px_140px_120px]";
+  // In Jira mode, add a Provider column between SHA and Author
+  const GRID_COLS = isJiraMode
+    ? "grid-cols-[140px_80px_1fr_120px_88px_110px_140px_120px]"
+    : "grid-cols-[140px_80px_1fr_120px_88px_140px_120px]";
+
+  const skeletonHeaders = isJiraMode
+    ? ["Type", "Scope", "Description", "Jira", "SHA", "Provider", "Author", "Date"]
+    : ["Type", "Scope", "Description", "Jira", "SHA", "Author", "Date"];
 
   if (loading) {
     return (
       <div className="flex flex-1 flex-col overflow-hidden bg-zinc-50/50 dark:bg-zinc-950">
         <div className={`grid ${GRID_COLS} items-center gap-4 border-b border-zinc-200 dark:border-white/5 bg-zinc-100/80 dark:bg-zinc-900/40 px-4 py-2`}>
-          {["Type", "Scope", "Description", "Jira", "SHA", "Author", "Date"].map((h) => (
+          {skeletonHeaders.map((h) => (
             <div key={h} className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">{h}</div>
           ))}
         </div>
@@ -454,7 +533,11 @@ export function CommitList({
         <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 shadow-xs">
           <GitCommitHorizontal size={20} className="text-zinc-400 dark:text-zinc-700" />
         </div>
-        <p className="text-sm text-zinc-500">No commits match your query.</p>
+        <p className="text-sm text-zinc-500">
+          {isJiraMode
+            ? "Bu bilete bağlı commit bulunamadı."
+            : "No commits match your query."}
+        </p>
       </div>
     );
   }
@@ -622,6 +705,42 @@ export function CommitList({
             </ColumnFilterPopover>
           </div>
 
+          {/* PROVIDER — Jira mode only */}
+          {isJiraMode && (
+            <div className="relative">
+              <ColHeader
+                isActive={filters.providers.length > 0}
+                onClick={() => setOpenPopover(openPopover === "providers" ? null : "providers")}
+              >
+                Provider
+              </ColHeader>
+              <ColumnFilterPopover isOpen={openPopover === "providers"} onClose={() => setOpenPopover(null)}>
+                <div className="max-h-64 overflow-y-auto custom-scrollbar flex flex-col gap-1.5">
+                  {uniqueProviders.length === 0 ? (
+                    <p className="text-[11px] text-zinc-500 px-1">No provider data</p>
+                  ) : (
+                    uniqueProviders.map(([val, count]) => {
+                      const style = PROVIDER_STYLES[val.toUpperCase()];
+                      return (
+                        <label key={val} className="flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-900 p-1 rounded transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={filters.providers.includes(val)}
+                            onChange={() => toggleArrayFilter("providers", val)}
+                            className="accent-indigo-600 rounded bg-zinc-100 dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700"
+                          />
+                          <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${style?.dot ?? "bg-zinc-400"}`} />
+                          <span className="flex-1 truncate">{style?.label ?? val}</span>
+                          <span className="text-[10px] text-zinc-500">({count})</span>
+                        </label>
+                      );
+                    })
+                  )}
+                </div>
+              </ColumnFilterPopover>
+            </div>
+          )}
+
           {/* AUTHOR */}
           <div className="relative">
             <ColHeader
@@ -723,6 +842,10 @@ export function CommitList({
                   return !inType && !inScope && !inDesc && !inJira && !inSha;
                 })();
 
+                // ── Determine Provider for link tooltip ────────────────────────
+                const commitProvider = isJiraMode ? providerMap?.get(raw.sha) : "GITHUB";
+                const providerName = commitProvider === "BITBUCKET" ? "Bitbucket" : "GitHub";
+
                 // Place sentinel 5 rows before the end of the visible slice
                 const isSentinelRow = idx === visibleCommits.length - 5;
 
@@ -811,7 +934,7 @@ export function CommitList({
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
-                              title="Open on GitHub"
+                              title={`Open on ${providerName}`}
                               className="flex h-5 w-5 items-center justify-center rounded text-zinc-400 dark:text-zinc-500 transition-colors hover:bg-zinc-200 dark:hover:bg-zinc-700/60 hover:text-zinc-800 dark:hover:text-zinc-300 cursor-pointer"
                             >
                               <ExternalLink size={11} />
@@ -819,6 +942,17 @@ export function CommitList({
                           )}
                         </div>
                       </div>
+
+                      {/* ── Col 6 (Jira mode): Provider badge ── */}
+                      {isJiraMode && (
+                        <div className="min-w-0">
+                          {providerMap?.get(raw.sha) ? (
+                            <ProviderBadge provider={providerMap.get(raw.sha)!} />
+                          ) : (
+                            <span className="text-xs text-zinc-400 dark:text-zinc-700">—</span>
+                          )}
+                        </div>
+                      )}
 
                       {/* ── Col 6: Author ── */}
                       <div className="min-w-0 flex items-center gap-2">
@@ -862,41 +996,50 @@ export function CommitList({
                   <span className="text-zinc-400 dark:text-zinc-600">{" "}(from {commits.length} loaded)</span>
                 )}
               </span>
-              <span className="text-[11px] text-zinc-400 dark:text-zinc-600 tabular-nums">
-                Total in repo:{" "}
-                <span className="font-medium text-zinc-500 dark:text-zinc-500">{totalCount}</span>
-              </span>
+              {!isJiraMode && (
+                <span className="text-[11px] text-zinc-400 dark:text-zinc-600 tabular-nums">
+                  Total in repo:{" "}
+                  <span className="font-medium text-zinc-500 dark:text-zinc-500">{totalCount}</span>
+                </span>
+              )}
             </div>
 
-            {/* Right: next page action */}
-            <button
-              onClick={onFetchMore}
-              disabled={isFetchingMore || !hasMore || commits.length >= 1000}
-              title={commits.length >= 1000 ? "GitHub API limit reached (max 1000 commits)" : ""}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-300 shadow-xs transition-all hover:border-indigo-400 hover:text-indigo-700 dark:hover:border-indigo-500 dark:hover:text-indigo-300 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
-            >
-              {isFetchingMore ? (
-                <>
-                  <Loader2 size={12} className="animate-spin" />
-                  Loading…
-                </>
-              ) : commits.length >= 1000 ? (
-                <>
-                  <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-                  API Limit Reached
-                </>
-              ) : !hasMore && totalCount > 0 ? (
-                <>
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  All loaded
-                </>
-              ) : (
-                <>
-                  <ChevronDown size={12} />
-                  Next 100 commits
-                </>
-              )}
-            </button>
+            {/* Right: next page action — hidden in Jira mode */}
+            {isJiraMode ? (
+              <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/8 px-3 py-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                Tüm commit’ler yüklendi
+              </span>
+            ) : (
+              <button
+                onClick={onFetchMore}
+                disabled={isFetchingMore || !hasMore || commits.length >= 1000}
+                title={commits.length >= 1000 ? "GitHub API limit reached (max 1000 commits)" : ""}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-300 shadow-xs transition-all hover:border-indigo-400 hover:text-indigo-700 dark:hover:border-indigo-500 dark:hover:text-indigo-300 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+              >
+                {isFetchingMore ? (
+                  <>
+                    <Loader2 size={12} className="animate-spin" />
+                    Loading…
+                  </>
+                ) : commits.length >= 1000 ? (
+                  <>
+                    <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                    API Limit Reached
+                  </>
+                ) : !hasMore && totalCount > 0 ? (
+                  <>
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    All loaded
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown size={12} />
+                    Next 100 commits
+                  </>
+                )}
+              </button>
+            )}
           </div>
         )}
       </div>

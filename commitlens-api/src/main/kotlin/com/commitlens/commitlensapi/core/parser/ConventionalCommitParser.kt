@@ -10,10 +10,10 @@ class ConventionalCommitParser {
         private val JIRA_REGEX = Regex("""\b([A-Z][A-Z0-9]+-[0-9]+)\b""")
     }
 
-    fun parse(message: String): ParsedCommitMessageDto {
-        if (message.isBlank()) {
+    fun parse(message: String?): ParsedCommitMessageDto {
+        if (message.isNullOrBlank()) {
             return ParsedCommitMessageDto(
-                rawMessage = message,
+                rawMessage = message ?: "",
                 type = null,
                 scope = null,
                 description = "",

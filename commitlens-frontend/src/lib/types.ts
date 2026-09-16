@@ -72,3 +72,25 @@ export interface UnifiedCommitDetail {
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 export type GitProvider = "GITHUB" | "BITBUCKET";
+
+// ─── Jira Integration ─────────────────────────────────────────────────────────
+export interface JiraCommitDto {
+  provider: GitProvider;
+  owner: string;
+  repo: string;
+  commit: UnifiedParsedCommit;
+}
+
+export interface JiraIssueCommitResponseDto {
+  issueKey: string;
+  summary: string;
+  totalCommits: number;
+  commits: JiraCommitDto[];
+}
+
+/** Lightweight context stored per-SHA to open CommitDetailModal correctly */
+export interface JiraCommitContext {
+  owner: string;
+  repo: string;
+  provider: GitProvider;
+}
