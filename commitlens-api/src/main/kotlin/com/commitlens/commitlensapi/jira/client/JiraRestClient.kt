@@ -1,0 +1,42 @@
+package com.commitlens.commitlensapi.jira.client
+
+import com.commitlens.commitlensapi.jira.model.JiraDevStatusResponseDto
+import com.commitlens.commitlensapi.jira.model.JiraIssueDto
+import org.springframework.http.HttpHeaders
+import org.springframework.stereotype.Component
+import org.springframework.web.client.RestClient
+import java.util.Base64
+
+@Component
+class JiraRestClient(private val jiraProperties: JiraProperties) {
+    private val restClient: RestClient
+
+    init {
+        val credentials = "${jiraProperties.email}:${jiraProperties.token}"
+        val basicAuthHeader = "Basic " + Base64.getEncoder().encodeToString(credentials.toByteArray())
+
+        this.restClient = RestClient.builder()
+            .baseUrl(jiraProperties.baseUrl)
+            .defaultHeader(HttpHeaders.AUTHORIZATION, basicAuthHeader)
+            .defaultHeader(HttpHeaders.ACCEPT, "application/json")
+            .build()
+    }
+
+    // Fetch the details of a specific Jira issue by its key (e.g., "PROJ-123") and return the JiraIssueDto containing the issue's summary and other relevant fields.
+    fun getIssue(issueKey: String): JiraIssueDto {
+        return restClient.get()
+            .uri("/rest/api/2/issue/{issueKey}?fields=summary", issueKey)
+            .retrieve()
+            .body(JiraIssueDto::class.java)
+            ?: throw IllegalStateException("Jira response body was empty when fetching issue details for $issueKey")
+    }
+
+    fun getDevStatus(issueId: String): JiraDevStatusResponseDto {
+        return restClient.get()
+            .uri("/rest/dev-status/1.0/issue/detail?issueId={issueId}&applicationType=bitbucket&dataType=repository", issueId)
+            .retrieve()
+            .body(JiraDevStatusResponseDto::class.java)
+            ?: throw IllegalStateException("Jira response body was empty when fetching development status for issue ID $issueId")
+    }
+
+}
