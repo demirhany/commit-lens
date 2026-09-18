@@ -9,3 +9,7 @@ bitbucket.workspace=
 jira.base-url=
 jira.email=
 jira.token=
+
+spring.cache.type=redis
+spring.data.redis.host=
+spring.data.redis.port=
