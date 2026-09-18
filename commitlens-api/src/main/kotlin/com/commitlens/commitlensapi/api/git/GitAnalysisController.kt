@@ -7,6 +7,7 @@ import com.commitlens.commitlensapi.core.model.base.ApiResponse
 import com.commitlens.commitlensapi.core.service.CommitService
 import com.commitlens.commitlensapi.provider.GitProviderType
 import com.commitlens.commitlensapi.provider.model.GitProviderMetadataDto
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
@@ -27,6 +28,7 @@ class GitAnalysisController(
 
     // Fetch and return a list of repositories from the specified Git provider (default is GitHub)
     @GetMapping("/repos")
+    @Cacheable(value = ["repos-cache"], keyGenerator = "userAwareKeyGenerator")
     fun getRepos(
         @RequestParam(defaultValue = "GITHUB") provider: GitProviderType
     ): ApiResponse<List<UnifiedRepoDto>> {
@@ -36,6 +38,7 @@ class GitAnalysisController(
 
     // Fetch and return detailed information about a specific repository from the specified Git provider (default is GitHub)
     @GetMapping("/repos/{owner}/{repo}")
+    @Cacheable(value = ["repo-cache"], keyGenerator = "userAwareKeyGenerator")
     fun getRepo(
         @PathVariable owner: String,
         @PathVariable repo: String,
@@ -47,6 +50,7 @@ class GitAnalysisController(
 
     // Search for commits in a specific repository of the specified Git provider (default is GitHub)
     @GetMapping("/repos/{owner}/{repo}/commits")
+    @Cacheable(value = ["commit-search-cache"], keyGenerator = "userAwareKeyGenerator")
     fun searchCommits(
         @PathVariable owner: String,
         @PathVariable repo: String,
@@ -61,6 +65,7 @@ class GitAnalysisController(
 
     // Fetch and return detailed information about a specific commit in a repository of the specified Git provider (default is GitHub)
     @GetMapping("/repos/{owner}/{repo}/commits/{sha}")
+    @Cacheable(value = ["commit-details-cache"], keyGenerator = "userAwareKeyGenerator")
     fun getCommitDetails(
         @PathVariable owner: String,
         @PathVariable repo: String,
