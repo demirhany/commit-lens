@@ -78,6 +78,7 @@ export interface JiraCommitDto {
   provider: GitProvider;
   owner: string;
   repo: string;
+  repoName?: string;
   commit: UnifiedParsedCommit;
 }
 
@@ -92,5 +93,6 @@ export interface JiraIssueCommitResponseDto {
 export interface JiraCommitContext {
   owner: string;
   repo: string;
+  repoName?: string;
   provider: GitProvider;
 }

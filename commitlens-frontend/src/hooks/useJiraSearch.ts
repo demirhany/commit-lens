@@ -50,6 +50,7 @@ export function useJiraSearch(): UseJiraSearchResult {
         map.set(sha, {
           owner: jiraCommit.owner,
           repo: jiraCommit.repo,
+          repoName: jiraCommit.repoName,
           provider: jiraCommit.provider,
         });
         normalised.push(jiraCommit.commit);
