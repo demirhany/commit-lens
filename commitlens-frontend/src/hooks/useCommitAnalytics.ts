@@ -207,7 +207,8 @@ export function useCommitAnalytics({
       if (!ctx) continue;
       const providerLabel =
         ctx.provider === "BITBUCKET" ? "Bitbucket" : "GitHub";
-      const label = `${ctx.repo} [${providerLabel}]`;
+      const repoDisplayName = ctx.repoName || ctx.repo;
+      const label = `${repoDisplayName} [${providerLabel}]`;
       counts.set(label, (counts.get(label) ?? 0) + 1);
     }
 

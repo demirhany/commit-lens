@@ -48,8 +48,9 @@ class JiraService(
                         JiraCommitDto(
                             provider = repoInfo.provider,
                             owner = repoInfo.owner,
-                            repo = repo.name.ifBlank { repoInfo.repo },
-                            commit = parsedCommit
+                            repo = repoInfo.repo,
+                            commit = parsedCommit,
+                            repoName = repo.name,
                         )
                     }
                 }

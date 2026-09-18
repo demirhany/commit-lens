@@ -14,5 +14,6 @@ data class JiraCommitDto(
     val provider: GitProviderType,
     val owner: String,
     val repo: String,
-    val commit: UnifiedParsedCommitDto
+    val commit: UnifiedParsedCommitDto,
+    val repoName: String? = ""
 )
