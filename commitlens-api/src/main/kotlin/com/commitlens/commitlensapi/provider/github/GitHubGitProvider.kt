@@ -16,7 +16,7 @@ class GitHubGitProvider(private val gitHubClient: GitHubRestClient) : Searchable
     override val providerType: GitProviderType = GitProviderType.GITHUB
 
     override fun getRepos(): List<UnifiedRepoDto> {
-        return gitHubClient.getUserRepos().map { repo ->
+        return gitHubClient.getAllUserRepos().map { repo ->
             UnifiedRepoDto(
                 id = repo.id.toString(),
                 name = repo.name,

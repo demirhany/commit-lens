@@ -1,5 +1,6 @@
 package com.commitlens.commitlensapi.provider.bitbucket.client
 
+import com.commitlens.commitlensapi.core.util.logger
 import com.commitlens.commitlensapi.provider.bitbucket.model.BitbucketCommitDto
 import com.commitlens.commitlensapi.provider.bitbucket.model.BitbucketDiffStatDto
 import com.commitlens.commitlensapi.provider.bitbucket.model.BitbucketPagedResponse
@@ -7,9 +8,12 @@ import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
+import java.net.URI
 
 @Component
-class BitbucketRestClient (private val bitbucketProperties: BitbucketProperties) {
+class BitbucketRestClient(private val bitbucketProperties: BitbucketProperties) {
+    private val log = logger()
+
     private val restClient: RestClient = RestClient.builder()
         .baseUrl(bitbucketProperties.baseUrl)
         .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer ${bitbucketProperties.token}")
@@ -26,11 +30,31 @@ class BitbucketRestClient (private val bitbucketProperties: BitbucketProperties)
     }
 
     // Get commit file changes, additions, and deletions (diffstat)
-    fun getCommitDiffStat(owner: String, repo: String, sha: String): BitbucketPagedResponse<BitbucketDiffStatDto> {
-        return restClient.get()
-            .uri("/repositories/{owner}/{repo}/diffstat/{sha}?pagelen=100", owner, repo, sha)
-            .retrieve()
-            .body(object : ParameterizedTypeReference<BitbucketPagedResponse<BitbucketDiffStatDto>>() {})
-            ?: throw IllegalStateException("Bitbucket response body was empty when fetching diffstat for commit: $sha in repo: $owner/$repo")
+    fun getAllCommitDiffStats(owner: String, repo: String, sha: String): List<BitbucketDiffStatDto> {
+        val allDiffs = mutableListOf<BitbucketDiffStatDto>()
+        var nextUrl: String? = "/repositories/$owner/$repo/diffstat/$sha?pagelen=100"
+        var pageCount = 0
+        val maxPages = 10
+
+        while (!nextUrl.isNullOrBlank() && pageCount < maxPages) {
+            pageCount++
+            val typeRef = object : ParameterizedTypeReference<BitbucketPagedResponse<BitbucketDiffStatDto>>() {}
+
+            val response = try {
+                if (nextUrl.startsWith("http")) {
+                    restClient.get().uri(URI.create(nextUrl)).retrieve().body(typeRef)
+                } else {
+                    restClient.get().uri(nextUrl).retrieve().body(typeRef)
+                }
+            } catch (e: Exception) {
+                log.error("Bitbucket diffstat sayfası alınırken hata oluştu ($owner/$repo@$sha, sayfa: $pageCount): {}", e.message)
+                break
+            } ?: break
+
+            allDiffs.addAll(response.values)
+            nextUrl = response.next
+        }
+
+        return allDiffs
     }
 }

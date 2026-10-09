@@ -22,7 +22,7 @@ class BitbucketGitProvider(
         sha: String
     ): UnifiedRawCommitDetailDto {
         val rawCommit = bitbucketRestClient.getCommitDetail(owner, repo, sha)
-        val diffStats = bitbucketRestClient.getCommitDiffStat(owner, repo, sha).values
+        val diffStats = bitbucketRestClient.getAllCommitDiffStats(owner, repo, sha)
 
         val totalAdditions = diffStats.sumOf { it.linesAdded }
         val totalDeletions = diffStats.sumOf { it.linesRemoved }
