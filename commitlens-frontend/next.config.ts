@@ -1,8 +1,9 @@
 import type { NextConfig } from "next";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8100";
+const API_BASE = process.env.INTERNAL_API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8100";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   reactCompiler: true,
   async rewrites() {
     return [
