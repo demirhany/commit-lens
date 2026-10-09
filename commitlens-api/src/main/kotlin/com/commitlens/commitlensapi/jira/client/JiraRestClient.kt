@@ -31,9 +31,19 @@ class JiraRestClient(private val jiraProperties: JiraProperties) {
             ?: throw IllegalStateException("Jira response body was empty when fetching issue details for $issueKey")
     }
 
-    fun getDevStatus(issueId: String): JiraDevStatusResponseDto {
+    fun getDevStatus(issueId: String, applicationType: String? = null): JiraDevStatusResponseDto {
         return restClient.get()
-            .uri("/rest/dev-status/1.0/issue/detail?issueId={issueId}&applicationType=bitbucket&dataType=repository", issueId)
+            .uri { uriBuilder ->
+                uriBuilder.path("/rest/dev-status/1.0/issue/detail")
+                    .queryParam("issueId", issueId)
+                    .queryParam("dataType", "repository")
+                    .apply {
+                        if (applicationType != null) {
+                            queryParam("applicationType", applicationType)
+                        }
+                    }
+                    .build()
+            }
             .retrieve()
             .body(JiraDevStatusResponseDto::class.java)
             ?: throw IllegalStateException("Jira response body was empty when fetching development status for issue ID $issueId")
