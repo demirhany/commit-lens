@@ -1,11 +1,13 @@
 package com.commitlens.commitlensapi.jira.parser
 
+import com.commitlens.commitlensapi.core.util.logger
 import com.commitlens.commitlensapi.exception.UnsupportedProviderException
 import com.commitlens.commitlensapi.provider.GitProviderType
 import org.springframework.stereotype.Component
 
 @Component
 class JiraRepoUrlParser {
+    private val log = logger()
 
     // Parse a repository URL and return a ResolvedRepoInfoDto object if successful, or null if the URL is invalid or unsupported.
     fun parseOrNull(repoUrl: String): ResolvedRepoInfoDto? {
@@ -14,10 +16,10 @@ class JiraRepoUrlParser {
             val withoutProtocol = cleanUrl.substringAfter("://")
             val host = withoutProtocol.substringBefore("/").lowercase()
             val path = withoutProtocol.substringAfter("/", "").trim('/')
-
             val pathSegments = path.split('/').filter { it.isNotBlank() }
 
             if (pathSegments.size < 2) {
+                log.warn("Invalid repository URL: '$repoUrl'. Expected format: 'https://<host>/<owner>/<repo>'.")
                return null
             }
 
@@ -32,6 +34,7 @@ class JiraRepoUrlParser {
             }
             ResolvedRepoInfoDto(owner, repo, provider)
         } catch (e: Exception) {
+            log.error("Error parsing repository URL: '$repoUrl'. Exception: ${e.message}")
             null
         }
     }

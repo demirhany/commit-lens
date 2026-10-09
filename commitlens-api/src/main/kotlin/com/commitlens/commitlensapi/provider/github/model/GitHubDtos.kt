@@ -140,7 +140,7 @@ data class GitHubSearchCommitResponseDto(
 *       "filename": "src/main/resources/application.yml",
 *       "status": "modified",
 *       "additions": 3,
-*       "deletions": 7,
+*       "deletions": 7data,
 *       "changes": 10
 *     }
 *   ]

@@ -3,6 +3,7 @@ package com.commitlens.commitlensapi.jira.service
 import com.commitlens.commitlensapi.core.model.commit.parsed.UnifiedParsedCommitDto
 import com.commitlens.commitlensapi.core.model.commit.raw.UnifiedRawCommitDto
 import com.commitlens.commitlensapi.core.parser.ConventionalCommitParser
+import com.commitlens.commitlensapi.core.util.logger
 import com.commitlens.commitlensapi.jira.client.JiraRestClient
 import com.commitlens.commitlensapi.jira.model.JiraCommitDto
 import com.commitlens.commitlensapi.jira.model.JiraIssueCommitResponseDto
@@ -15,6 +16,7 @@ class JiraService(
     private val jiraRepoUrlParser: JiraRepoUrlParser,
     private val conventionalCommitParser: ConventionalCommitParser
 ) {
+   private val log = logger()
 
     fun getIssueCommits(issueKey: String): JiraIssueCommitResponseDto {
 
@@ -28,6 +30,7 @@ class JiraService(
             detail.repositories.flatMap { repo ->
                 val repoInfo = jiraRepoUrlParser.parseOrNull(repo.url)
                 if (repoInfo == null) {
+                    log.warn("Could not parse repository URL: ${repo.url}. Skipping commits for this repository.")
                     emptyList()
                 } else {
                     repo.commits.map { jiraCommit ->

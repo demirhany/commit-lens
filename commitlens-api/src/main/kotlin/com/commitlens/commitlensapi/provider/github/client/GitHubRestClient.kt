@@ -22,13 +22,35 @@ class GitHubRestClient(
         .build()
 
     // List the repositories that the authenticated user has access to
-    fun getUserRepos(): List<GitHubRepoDto> {
-        return restClient.get()
-            .uri("/user/repos?per_page=100&sort=updated")
-            .retrieve()
-            // Deserialize the response into a list of GitHubRepoDto
-            .body(object : ParameterizedTypeReference<List<GitHubRepoDto>>() {})
-            ?: throw IllegalStateException("GitHub response body was empty when fetching user repositories")
+    fun getAllUserRepos(): List<GitHubRepoDto> {
+        val allRepos = mutableListOf<GitHubRepoDto>()
+        var page = 1
+        val perPage = 100
+        val maxPages = 20
+        val typeRef = object : ParameterizedTypeReference<List<GitHubRepoDto>>() {}
+
+        while (page <= maxPages) {
+            val pageRepos = try {
+                restClient.get()
+                    .uri("/user/repos?per_page={perPage}&page={page}&sort=updated", perPage, page)
+                    .retrieve()
+                    .body(typeRef)
+                    ?: emptyList()
+            } catch (e: Exception) {
+                throw IllegalStateException(
+                    "GitHub response body was empty when fetching user repositories on page $page",
+                    e
+                )
+            }
+
+            if (pageRepos.isEmpty()) break
+            allRepos.addAll(pageRepos)
+
+            if (pageRepos.size < perPage) break
+            page++
+        }
+
+        return allRepos
     }
 
     // Get details of a specific repository by owner and repo name
@@ -41,7 +63,13 @@ class GitHubRestClient(
     }
 
     // Search for commits in a specific repository based on the provided query (including substrings like "Jira key", "feat", etc.)
-    fun searchCommits(owner: String, repo: String, query: String, page: Int = 1, perPage: Int = 100): GitHubSearchCommitResponseDto {
+    fun searchCommits(
+        owner: String,
+        repo: String,
+        query: String,
+        page: Int = 1,
+        perPage: Int = 100
+    ): GitHubSearchCommitResponseDto {
         return restClient.get()
             .uri { uriBuilder ->
                 uriBuilder.path("/search/commits")
@@ -54,7 +82,8 @@ class GitHubRestClient(
             }
             .retrieve()
             // Deserialize the response into a GitHubSearchCommitResponseDto and return the list of commit items in that dto
-            .body(GitHubSearchCommitResponseDto::class.java)?: throw IllegalStateException("GitHub search API returned an empty response body for query: '$query'")
+            .body(GitHubSearchCommitResponseDto::class.java)
+            ?: throw IllegalStateException("GitHub search API returned an empty response body for query: '$query'")
     }
 
     // Get the recent commits from a specific repository, with optional pagination parameters (page and perPage)
