@@ -1,0 +1,56 @@
+networks:
+  commitlens-net:
+    driver: bridge
+
+volumes:
+  redis-data:
+
+services:
+  redis:
+    image: redis:8.10.1-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - commitlens-net
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./commitlens-api
+    networks:
+      - commitlens-net
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "8100:8100"
+    environment:
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - SPRING_CACHE_TYPE=redis
+      - APP_CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - BITBUCKET_TOKEN=${BITBUCKET_TOKEN:-}
+      - BITBUCKET_WORKSPACE=${BITBUCKET_WORKSPACE:-}
+      - JIRA_BASE_URL=${JIRA_BASE_URL:-}
+      - JIRA_EMAIL=${JIRA_EMAIL:-}
+      - JIRA_TOKEN=${JIRA_TOKEN:-}
+
+  frontend:
+    build:
+      context: ./commitlens-frontend
+    networks:
+      - commitlens-net
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+    environment:
+      - INTERNAL_API_URL=http://api:8100
