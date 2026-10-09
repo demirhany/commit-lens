@@ -57,7 +57,6 @@ class CommitService (private val gitProviderFactory: GitProviderFactory, private
         if (perPage <= 0) {
             throw InvalidRequestParameterException("'perPage' must be a positive integer, got: $perPage")
         }
-
         if (perPage > 100) {
             throw InvalidRequestParameterException("'perPage' must not exceed 100, got: $perPage")
         }
