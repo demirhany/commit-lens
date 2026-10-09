@@ -14,9 +14,6 @@ class UserAwareKeyGenerator : KeyGenerator {
         method: Method,
         vararg params: Any?
     ): Any {
-        // In a real application, you would retrieve the user ID from the security context or session.
-        val userId = mockUserId
-
         // Generate a unique key based on the user ID, method name, and parameters.
         val canonicalParams = method.parameters.indices
             .map { index ->
@@ -30,7 +27,7 @@ class UserAwareKeyGenerator : KeyGenerator {
         // Use MD5 hashing to create a fixed-length representation of the parameters to avoid excessively long cache keys.
         val paramsHash = md5(canonicalParams)
 
-        return "$userId:${method.name}:$paramsHash"
+        return "commitlens:${method.name}:$paramsHash"
     }
 
     // Helper function to compute the MD5 hash of a string.
