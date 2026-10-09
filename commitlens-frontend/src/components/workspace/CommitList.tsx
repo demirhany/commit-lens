@@ -1025,7 +1025,7 @@ export function CommitList({
             {isJiraMode ? (
               <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/8 px-3 py-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                Tüm commit’ler yüklendi
+                All loaded
               </span>
             ) : (
               <button
