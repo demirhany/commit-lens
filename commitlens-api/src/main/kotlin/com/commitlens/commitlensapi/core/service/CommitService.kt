@@ -8,6 +8,7 @@ import com.commitlens.commitlensapi.core.parser.ConventionalCommitParser
 import com.commitlens.commitlensapi.exception.EmptySearchQueryException
 import com.commitlens.commitlensapi.exception.InvalidRequestParameterException
 import com.commitlens.commitlensapi.exception.ProviderCapabilityNotSupportedException
+import com.commitlens.commitlensapi.exception.ResourceNotFoundException
 import com.commitlens.commitlensapi.provider.GitProviderFactory
 import com.commitlens.commitlensapi.provider.GitProviderType
 import com.commitlens.commitlensapi.provider.RepositoryAwareGitProvider
@@ -19,13 +20,17 @@ import org.springframework.stereotype.Service
 class CommitService (private val gitProviderFactory: GitProviderFactory, private val conventionalCommitParser: ConventionalCommitParser) {
 
     fun getSupportedProviders(): List<GitProviderMetadataDto> {
-        return GitProviderType.entries.map { providerType ->
-            val strategy = gitProviderFactory.getStrategy(providerType)
-            GitProviderMetadataDto(
-                provider = providerType,
-                displayName = providerType.name.lowercase().replaceFirstChar { it.uppercase() },
-                capabilities = strategy.capabilities
-            )
+        try {
+            return GitProviderType.entries.map { providerType ->
+                val strategy = gitProviderFactory.getStrategy(providerType)
+                GitProviderMetadataDto(
+                    provider = providerType,
+                    displayName = providerType.name.lowercase().replaceFirstChar { it.uppercase() },
+                    capabilities = strategy.capabilities
+                )
+            }
+        } catch (e: Exception) {
+            throw ResourceNotFoundException("Failed to retrieve supported providers: ${e.message}")
         }
     }
 
