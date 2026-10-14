@@ -74,6 +74,13 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>io.mockk</groupId>
+            <!-- MockK is a Kotlin Multiplatform artifact; Maven needs the explicit JVM variant -->
+            <artifactId>mockk-jvm</artifactId>
+            <version>1.13.10</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>3.1.0</version>
