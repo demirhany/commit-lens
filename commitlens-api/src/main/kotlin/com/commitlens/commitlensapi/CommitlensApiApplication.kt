@@ -1,8 +1,8 @@
 package com.commitlens.commitlensapi
 
-import com.commitlens.commitlensapi.jira.client.JiraProperties
-import com.commitlens.commitlensapi.provider.bitbucket.client.BitbucketProperties
-import com.commitlens.commitlensapi.provider.github.client.GitHubProperties
+import com.commitlens.commitlensapi.jira.internal.client.JiraProperties
+import com.commitlens.commitlensapi.provider.internal.bitbucket.client.BitbucketProperties
+import com.commitlens.commitlensapi.provider.internal.github.client.GitHubProperties
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.runApplication
@@ -11,7 +11,8 @@ import org.springframework.boot.runApplication
 @EnableConfigurationProperties(
     GitHubProperties::class,
     JiraProperties::class,
-    BitbucketProperties::class)
+    BitbucketProperties::class
+)
 class CommitlensApiApplication
 
 fun main(args: Array<String>) {
