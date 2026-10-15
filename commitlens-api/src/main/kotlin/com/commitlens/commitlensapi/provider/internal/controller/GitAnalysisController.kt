@@ -4,7 +4,7 @@ import com.commitlens.commitlensapi.core.model.UnifiedRepoDto
 import com.commitlens.commitlensapi.core.model.base.ApiResponse
 import com.commitlens.commitlensapi.core.model.commit.parsed.UnifiedCommitSearchResponseDto
 import com.commitlens.commitlensapi.core.model.commit.parsed.UnifiedParsedCommitDetailDto
-import com.commitlens.commitlensapi.provider.api.CommitAnalysisApi
+import com.commitlens.commitlensapi.provider.internal.service.CommitService
 import com.commitlens.commitlensapi.provider.api.GitProviderMetadataDto
 import com.commitlens.commitlensapi.provider.api.GitProviderType
 import io.swagger.v3.oas.annotations.Operation
@@ -28,7 +28,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse as OpenApiResponse
     description = "Provider-agnostic repository browsing, commit search and Conventional Commits analysis."
 )
 class GitAnalysisController(
-    private val commitAnalysisApi: CommitAnalysisApi
+    private val commitService: CommitService
 ) {
     @GetMapping("/providers")
     @Operation(
@@ -45,7 +45,7 @@ class GitAnalysisController(
         )
     )
     fun getSupportedProviders(): ApiResponse<List<GitProviderMetadataDto>> {
-        val supportedProviders = commitAnalysisApi.getSupportedProviders()
+        val supportedProviders = commitService.getSupportedProviders()
         return ApiResponse.success(data = supportedProviders)
     }
 
@@ -69,7 +69,7 @@ class GitAnalysisController(
         @Parameter(description = "Git provider to query.", example = "GITHUB")
         @RequestParam(defaultValue = "GITHUB") provider: GitProviderType
     ): ApiResponse<List<UnifiedRepoDto>> {
-        val repos = commitAnalysisApi.getRepos(provider)
+        val repos = commitService.getRepos(provider)
         return ApiResponse.success(data = repos)
     }
 
@@ -101,7 +101,7 @@ class GitAnalysisController(
         @Parameter(description = "Git provider to query.", example = "GITHUB")
         @RequestParam(defaultValue = "GITHUB") provider: GitProviderType
     ): ApiResponse<UnifiedRepoDto> {
-        val repoDetails = commitAnalysisApi.getRepo(owner, repo, provider)
+        val repoDetails = commitService.getRepo(owner, repo, provider)
         return ApiResponse.success(data = repoDetails)
     }
 
@@ -140,7 +140,7 @@ class GitAnalysisController(
         @Parameter(description = "Git provider to query.", example = "GITHUB")
         @RequestParam(defaultValue = "GITHUB") provider: GitProviderType
     ): ApiResponse<UnifiedCommitSearchResponseDto> {
-        val searchResult = commitAnalysisApi.searchCommits(owner, repo, query, page, perPage, provider)
+        val searchResult = commitService.searchCommits(owner, repo, query, page, perPage, provider)
         return ApiResponse.success(data = searchResult)
     }
 
@@ -175,7 +175,7 @@ class GitAnalysisController(
         @Parameter(description = "Git provider to query.", example = "GITHUB")
         @RequestParam(defaultValue = "GITHUB") provider: GitProviderType
     ): ApiResponse<UnifiedParsedCommitDetailDto> {
-        val commitDetails = commitAnalysisApi.getCommitDetails(owner, repo, sha, provider)
+        val commitDetails = commitService.getCommitDetails(owner, repo, sha, provider)
         return ApiResponse.success(data = commitDetails)
     }
 }

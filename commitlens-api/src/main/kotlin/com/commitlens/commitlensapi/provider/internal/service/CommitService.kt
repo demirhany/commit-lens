@@ -9,7 +9,6 @@ import com.commitlens.commitlensapi.core.model.commit.parsed.UnifiedCommitSearch
 import com.commitlens.commitlensapi.core.model.commit.parsed.UnifiedParsedCommitDetailDto
 import com.commitlens.commitlensapi.core.model.commit.parsed.UnifiedParsedCommitDto
 import com.commitlens.commitlensapi.core.parser.api.CommitParserApi
-import com.commitlens.commitlensapi.provider.api.CommitAnalysisApi
 import com.commitlens.commitlensapi.provider.api.GitProviderMetadataDto
 import com.commitlens.commitlensapi.provider.api.GitProviderType
 import com.commitlens.commitlensapi.provider.internal.strategy.GitProviderFactory
@@ -21,9 +20,9 @@ import org.springframework.stereotype.Service
 class CommitService(
     private val gitProviderFactory: GitProviderFactory,
     private val commitParserApi: CommitParserApi
-) : CommitAnalysisApi {
+) {
 
-    override fun getSupportedProviders(): List<GitProviderMetadataDto> {
+    fun getSupportedProviders(): List<GitProviderMetadataDto> {
         try {
             return GitProviderType.entries.map { providerType ->
                 val strategy = gitProviderFactory.getStrategy(providerType)
@@ -38,7 +37,7 @@ class CommitService(
         }
     }
 
-    override fun getRepos(provider: GitProviderType): List<UnifiedRepoDto> {
+    fun getRepos(provider: GitProviderType): List<UnifiedRepoDto> {
         val strategy = gitProviderFactory.getStrategy(provider)
         if (strategy !is RepositoryAwareGitProvider) {
             throw ProviderCapabilityNotSupportedException("The provider '$provider' does not support listing repositories.")
@@ -46,7 +45,7 @@ class CommitService(
         return strategy.getRepos()
     }
 
-    override fun getRepo(owner: String, repo: String, provider: GitProviderType): UnifiedRepoDto {
+    fun getRepo(owner: String, repo: String, provider: GitProviderType): UnifiedRepoDto {
         val strategy = gitProviderFactory.getStrategy(provider)
         if (strategy !is RepositoryAwareGitProvider) {
             throw ProviderCapabilityNotSupportedException("The provider '$provider' does not support fetching repository details.")
@@ -54,7 +53,7 @@ class CommitService(
         return strategy.getRepo(owner, repo)
     }
 
-    override fun searchCommits(
+    fun searchCommits(
         owner: String,
         repo: String,
         query: String,
@@ -105,7 +104,7 @@ class CommitService(
         )
     }
 
-    override fun getCommitDetails(
+    fun getCommitDetails(
         owner: String,
         repo: String,
         sha: String,
