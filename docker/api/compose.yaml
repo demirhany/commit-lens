@@ -1,0 +1,29 @@
+services:
+  api:
+    build:
+      context: ../../commitlens-api
+    ports:
+      - "8100:8100"
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      # redis
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - SPRING_CACHE_TYPE=redis
+      # postgres
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-commitlens}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-postgres}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      # application
+      - APP_CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - BITBUCKET_TOKEN=${BITBUCKET_TOKEN:-}
+      - BITBUCKET_WORKSPACE=${BITBUCKET_WORKSPACE:-}
+      - JIRA_BASE_URL=${JIRA_BASE_URL:-}
+      - JIRA_EMAIL=${JIRA_EMAIL:-}
+      - JIRA_TOKEN=${JIRA_TOKEN:-}

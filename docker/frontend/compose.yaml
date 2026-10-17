@@ -1,0 +1,10 @@
+services:
+  frontend:
+    build:
+      context: ../../commitlens-frontend
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+    environment:
+      - INTERNAL_API_URL=http://api:8100
