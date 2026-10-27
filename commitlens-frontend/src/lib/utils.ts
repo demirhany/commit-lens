@@ -90,3 +90,14 @@ export function formatDate(iso?: string | null): string {
     return "—";
   }
 }
+
+/** Builds a user-facing message from an ApiResponse failure (message + validation details). */
+export function formatApiError(
+  res: { message?: string | null; details?: string[] | null; status?: number },
+  fallback: string
+): string {
+  const base = res.message ?? fallback;
+  return res.details && res.details.length > 0
+    ? `${base}: ${res.details.join("; ")}`
+    : base;
+}

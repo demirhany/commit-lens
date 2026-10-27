@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import { fetchCommits } from "@/lib/api";
+import { formatApiError } from "@/lib/utils";
 import type { UnifiedParsedCommit } from "@/lib/types";
 
 const PER_PAGE = 100;
@@ -19,7 +20,7 @@ interface UseCommitSearchResult {
   isFetchingMore: boolean;
   error: string | null;
   /** Trigger a brand-new search — resets pool, starts from page 1 */
-  search: (owner: string, repo: string, query: string) => Promise<void>;
+  search: (owner: string, repo: string, query: string, profileName?: string) => Promise<void>;
   /** Fetch the next page and append to pool */
   fetchMore: () => Promise<void>;
   reset: () => void;
@@ -35,18 +36,18 @@ export function useCommitSearch(): UseCommitSearchResult {
 
   // Keep current search context in a ref so fetchMore can access it
   // without needing to be recreated on every render.
-  const searchCtx = useRef<{ owner: string; repo: string; query: string } | null>(null);
+  const searchCtx = useRef<{ owner: string; repo: string; query: string; profileName?: string } | null>(null);
 
   // ── Derived state ──────────────────────────────────────────────────────────
   const hasMore = commits.length < totalCount && totalCount > 0;
 
   // ── Initial Search (page 1) ────────────────────────────────────────────────
   const search = useCallback(
-    async (owner: string, repo: string, query: string) => {
+    async (owner: string, repo: string, query: string, profileName?: string) => {
       if (!query.trim()) return;
 
       // Store context for subsequent fetchMore calls
-      searchCtx.current = { owner, repo, query };
+      searchCtx.current = { owner, repo, query, profileName };
 
       setLoading(true);
       setError(null);
@@ -55,9 +56,9 @@ export function useCommitSearch(): UseCommitSearchResult {
       setCurrentPage(0);
 
       try {
-        const res = await fetchCommits(owner, repo, query, 1, PER_PAGE, "GITHUB");
+        const res = await fetchCommits(owner, repo, query, 1, PER_PAGE, "GITHUB", profileName);
         if (!res.success || !res.data) {
-          setError(res.message ?? "Failed to search commits.");
+          setError(formatApiError(res, "Failed to search commits."));
         } else {
           setCommits(res.data.items ?? []);
           setTotalCount(Number(res.data.totalCount) || 0);
@@ -76,16 +77,16 @@ export function useCommitSearch(): UseCommitSearchResult {
   const fetchMore = useCallback(async () => {
     if (!searchCtx.current || isFetchingMore || loading) return;
 
-    const { owner, repo, query } = searchCtx.current;
+    const { owner, repo, query, profileName } = searchCtx.current;
     const nextPage = currentPage + 1;
 
     setIsFetchingMore(true);
     setError(null);
 
     try {
-      const res = await fetchCommits(owner, repo, query, nextPage, PER_PAGE, "GITHUB");
+      const res = await fetchCommits(owner, repo, query, nextPage, PER_PAGE, "GITHUB", profileName);
       if (!res.success || !res.data) {
-        setError(res.message ?? "Failed to load more commits.");
+        setError(formatApiError(res, "Failed to load more commits."));
       } else {
         setCommits((prev) => [...prev, ...(res.data!.items ?? [])]);
         setTotalCount(Number(res.data.totalCount) || 0);

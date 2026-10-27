@@ -17,7 +17,7 @@ interface UseJiraSearchResult {
   contextMap: Map<string, JiraCommitContext>;
   loading: boolean;
   error: string | null;
-  searchByKey: (issueKey: string) => Promise<void>;
+  searchByKey: (issueKey: string, profileName?: string) => Promise<void>;
   reset: () => void;
 }
 
@@ -28,7 +28,7 @@ export function useJiraSearch(): UseJiraSearchResult {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const searchByKey = useCallback(async (issueKey: string) => {
+  const searchByKey = useCallback(async (issueKey: string, profileName?: string) => {
     const key = issueKey.trim().toUpperCase();
     if (!key) return;
 
@@ -39,7 +39,7 @@ export function useJiraSearch(): UseJiraSearchResult {
     setContextMap(new Map());
 
     try {
-      const data = await fetchJiraIssueCommits(key);
+      const data = await fetchJiraIssueCommits(key, profileName);
 
       // Build per-SHA context map for CommitDetailModal
       const map = new Map<string, JiraCommitContext>();
