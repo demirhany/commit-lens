@@ -31,7 +31,9 @@ const TYPE_STYLES: Record<string, { pill: string; dot: string }> = {
 };
 
 const ZINC_PILL = "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700";
-const NON_CONV = "bg-zinc-100/80 dark:bg-zinc-900 text-zinc-500 border-dashed border-zinc-300 dark:border-zinc-700";
+const NON_CONV =
+  "bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/30 border-dashed";
+const NON_CONV_DOT = "bg-rose-500 dark:bg-rose-400";
 
 // ─── Provider badge ───────────────────────────────────────────────────────────
 const PROVIDER_STYLES: Record<string, { pill: string; dot: string; label: string }> = {
@@ -73,7 +75,7 @@ function TypeBadge({
   isConventional?: boolean | null;
   isBreakingChange?: boolean | null;
 }) {
-  const label = type?.toLowerCase() || "raw";
+  const label = type && type.trim() ? type.trim().toLowerCase() : "raw";
   const conv = isConventional ?? false;
   const breaking = isBreakingChange ?? false;
   const style = conv ? (TYPE_STYLES[label]?.pill ?? ZINC_PILL) : NON_CONV;
@@ -86,10 +88,14 @@ function TypeBadge({
           style
         )}
       >
-        {conv && TYPE_STYLES[label] && (
-          <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", TYPE_STYLES[label].dot)} />
+        {conv ? (
+          TYPE_STYLES[label] && (
+            <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", TYPE_STYLES[label].dot)} />
+          )
+        ) : (
+          <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", NON_CONV_DOT)} />
         )}
-        {conv ? label : "raw"}
+        {label}
       </span>
       {breaking && (
         <span className="inline-flex items-center rounded-full border border-rose-300 dark:border-rose-500/30 bg-rose-100 dark:bg-rose-500/15 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-rose-700 dark:text-rose-400 whitespace-nowrap">
@@ -837,7 +843,7 @@ export function CommitList({
 
                 const isConventional = pm?.isConventional ?? false;
                 const isBreaking = pm?.isBreakingChange ?? false;
-                const type = pm?.type?.toLowerCase() || "raw";
+                const type = pm?.type ? pm.type.toLowerCase() : null;
                 const scope = pm?.scope || null;
                 const jiraKeys = pm?.jiraKeys ?? [];
                 const displayDescription = pm?.description || pm?.rawMessage || raw.message || raw.sha.substring(0, 7);
@@ -849,7 +855,7 @@ export function CommitList({
                 const isMatchedInBody = (() => {
                   if (!activeQuery) return false;
                   const q = activeQuery.toLowerCase();
-                  const inType = type.includes(q);
+                  const inType = (type ?? "raw").includes(q);
                   const inScope = (scope ?? "").toLowerCase().includes(q);
                   const inDesc = displayDescription.toLowerCase().includes(q);
                   const inJira = jiraKeys.some((k) => k.toLowerCase().includes(q));
@@ -880,8 +886,11 @@ export function CommitList({
                       className={cn(
                         `group grid ${GRID_COLS} items-center gap-4`,
                         "border-b border-zinc-100 dark:border-white/5 px-6 py-2.5 cursor-pointer",
-                        "transition-colors duration-150 hover:bg-zinc-100/70 dark:hover:bg-zinc-900/70",
-                        "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-indigo-500 dark:focus-visible:ring-zinc-600"
+                        "transition-colors duration-150",
+                        "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-indigo-500 dark:focus-visible:ring-zinc-600",
+                        !isConventional
+                          ? "bg-red-500/[0.03] dark:bg-red-950/[0.15] border-l-2 border-l-red-500/40 hover:bg-red-500/[0.06] dark:hover:bg-red-950/[0.25]"
+                          : "border-l-2 border-l-transparent hover:bg-zinc-100/70 dark:hover:bg-zinc-900/70"
                       )}
                     >
                       {/* ── Col 1: Type badge + BREAKING + optional body-match badge ── */}
