@@ -6,9 +6,7 @@ import java.lang.reflect.Method
 import java.security.MessageDigest
 
 @Component("userAwareKeyGenerator")
-class UserAwareKeyGenerator : KeyGenerator {
-    private val mockUserId = "532e2e86-f07b-4e25-ba60-03840e5a2a0b"
-
+class KeyGenerator : KeyGenerator {
     override fun generate(
         target: Any,
         method: Method,

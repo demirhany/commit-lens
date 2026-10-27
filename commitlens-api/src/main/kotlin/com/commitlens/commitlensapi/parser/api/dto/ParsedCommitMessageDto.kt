@@ -1,4 +1,4 @@
-package com.commitlens.commitlensapi.core.parser.api
+package com.commitlens.commitlensapi.core.parser.api.dto
 
 import com.fasterxml.jackson.annotation.JsonProperty
 

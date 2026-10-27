@@ -1,5 +1,8 @@
 package com.commitlens.commitlensapi.core.parser.api
 
+import com.commitlens.commitlensapi.core.parser.api.dto.CommitPolicyDto
+import com.commitlens.commitlensapi.core.parser.api.dto.ParsedCommitMessageDto
+
 /**
  * CommitParserApi defines the contract for parsing commit messages.
  * Implementations of this interface should provide the logic to parse
@@ -7,4 +10,6 @@ package com.commitlens.commitlensapi.core.parser.api
  */
 interface CommitParserApi {
     fun parse(message: String?): ParsedCommitMessageDto
+
+    fun parse(message: String?, policy: CommitPolicyDto = CommitPolicyDto.DEFAULT): ParsedCommitMessageDto
 }
