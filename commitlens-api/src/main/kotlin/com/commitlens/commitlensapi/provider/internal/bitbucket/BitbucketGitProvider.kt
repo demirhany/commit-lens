@@ -1,8 +1,8 @@
 package com.commitlens.commitlensapi.provider.internal.bitbucket
 
-import com.commitlens.commitlensapi.core.model.UnifiedFileDiffDto
-import com.commitlens.commitlensapi.core.model.commit.raw.UnifiedRawCommitDetailDto
-import com.commitlens.commitlensapi.core.model.commit.raw.UnifiedRawCommitDto
+import com.commitlens.commitlensapi.provider.api.UnifiedFileDiffDto
+import com.commitlens.commitlensapi.provider.api.commit.raw.UnifiedRawCommitDetailDto
+import com.commitlens.commitlensapi.provider.api.commit.raw.UnifiedRawCommitDto
 import com.commitlens.commitlensapi.provider.api.GitProviderType
 import com.commitlens.commitlensapi.provider.internal.bitbucket.client.BitbucketRestClient
 import com.commitlens.commitlensapi.provider.internal.bitbucket.model.BitbucketAuthorDto
