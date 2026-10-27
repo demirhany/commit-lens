@@ -1,9 +1,9 @@
-package com.commitlens.commitlensapi.core.parser.internal.api
+package com.commitlens.commitlensapi.parser.internal.api
 
-import com.commitlens.commitlensapi.core.parser.api.CommitParserApi
-import com.commitlens.commitlensapi.core.parser.api.dto.CommitPolicyDto
-import com.commitlens.commitlensapi.core.parser.api.dto.ParsedCommitMessageDto
-import com.commitlens.commitlensapi.core.parser.api.ScopePolicy
+import com.commitlens.commitlensapi.parser.api.CommitParserApi
+import com.commitlens.commitlensapi.parser.api.dto.CommitPolicyDto
+import com.commitlens.commitlensapi.parser.api.dto.ParsedCommitMessageDto
+import com.commitlens.commitlensapi.parser.api.ScopePolicy
 import org.springframework.stereotype.Component
 
 @Component
@@ -57,7 +57,7 @@ class CommitParserService
         }
 
         val (rawType, rawScope, breakingBang, rawDescription) = match.destructured
-        val sanitizedScope = rawScope.ifBlank { null }
+        val sanitizedScope = rawScope.trim().lowercase().ifBlank { null }
         val description = rawDescription.trim()
 
         val isValidScope = matchScope(sanitizedScope, policy)
@@ -78,22 +78,21 @@ class CommitParserService
     }
 
     fun matchScope(scope: String?, policy: CommitPolicyDto): Boolean {
-        if (policy.scopePolicy == ScopePolicy.REQUIRED && scope.isNullOrBlank()) {
-            return false
-        }
+        if (policy.scopePolicy == ScopePolicy.REQUIRED && scope.isNullOrBlank()) return false
+        if (policy.scopePolicy == ScopePolicy.DISABLED) return scope.isNullOrBlank()
 
-        if (policy.scopePolicy == ScopePolicy.OPTIONAL) {
-            return policy.scopes.isEmpty() || scope.isNullOrBlank() || policy.scopes.contains(scope)
-        }
+        val isAllowed = policy.scopes.isEmpty() ||
+                policy.scopes.any { it.equals(scope, ignoreCase = true) }
 
-        if (policy.scopePolicy == ScopePolicy.DISABLED) {
-            return scope.isNullOrBlank()
+        return if (policy.scopePolicy == ScopePolicy.OPTIONAL) {
+            scope.isNullOrBlank() || isAllowed
+        } else {
+            isAllowed
         }
-
-        return policy.scopes.isEmpty() || policy.scopes.contains(scope)
     }
 
     fun matchType(type: String?, policy: CommitPolicyDto): Boolean {
-        return !type.isNullOrBlank() && (policy.types.isEmpty() || policy.types.contains(type))
+        return !type.isNullOrBlank() &&
+                (policy.types.isEmpty() || policy.types.any { it.equals(type, ignoreCase = true) })
     }
 }

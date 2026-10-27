@@ -1,7 +1,7 @@
-package com.commitlens.commitlensapi.core.parser.api
+package com.commitlens.commitlensapi.parser.api
 
-import com.commitlens.commitlensapi.core.parser.api.dto.CommitPolicyDto
-import com.commitlens.commitlensapi.core.parser.api.dto.ParsedCommitMessageDto
+import com.commitlens.commitlensapi.parser.api.dto.CommitPolicyDto
+import com.commitlens.commitlensapi.parser.api.dto.ParsedCommitMessageDto
 
 /**
  * CommitParserApi defines the contract for parsing commit messages.
