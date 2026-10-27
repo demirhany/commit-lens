@@ -1,4 +1,4 @@
-package com.commitlens.commitlensapi.core.model.commit.parsed
+package com.commitlens.commitlensapi.provider.api.commit.parsed
 
 data class UnifiedCommitSearchResponseDto (
     val totalCount: Int?,

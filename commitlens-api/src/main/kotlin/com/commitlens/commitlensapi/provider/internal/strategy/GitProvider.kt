@@ -1,8 +1,8 @@
 package com.commitlens.commitlensapi.provider.internal.strategy
 
-import com.commitlens.commitlensapi.core.model.UnifiedRepoDto
-import com.commitlens.commitlensapi.core.model.commit.raw.UnifiedRawCommitDetailDto
-import com.commitlens.commitlensapi.core.model.commit.raw.UnifiedRawCommitSearchResponseDto
+import com.commitlens.commitlensapi.provider.api.UnifiedRepoDto
+import com.commitlens.commitlensapi.provider.api.commit.raw.UnifiedRawCommitDetailDto
+import com.commitlens.commitlensapi.provider.api.commit.raw.UnifiedRawCommitSearchResponseDto
 import com.commitlens.commitlensapi.provider.api.GitProviderCapability
 import com.commitlens.commitlensapi.provider.api.GitProviderType
 

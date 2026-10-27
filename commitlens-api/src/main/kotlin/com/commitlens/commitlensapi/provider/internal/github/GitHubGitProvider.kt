@@ -1,10 +1,10 @@
 package com.commitlens.commitlensapi.provider.internal.github
 
-import com.commitlens.commitlensapi.core.model.UnifiedFileDiffDto
-import com.commitlens.commitlensapi.core.model.UnifiedRepoDto
-import com.commitlens.commitlensapi.core.model.commit.raw.UnifiedRawCommitDetailDto
-import com.commitlens.commitlensapi.core.model.commit.raw.UnifiedRawCommitDto
-import com.commitlens.commitlensapi.core.model.commit.raw.UnifiedRawCommitSearchResponseDto
+import com.commitlens.commitlensapi.provider.api.UnifiedFileDiffDto
+import com.commitlens.commitlensapi.provider.api.UnifiedRepoDto
+import com.commitlens.commitlensapi.provider.api.commit.raw.UnifiedRawCommitDetailDto
+import com.commitlens.commitlensapi.provider.api.commit.raw.UnifiedRawCommitDto
+import com.commitlens.commitlensapi.provider.api.commit.raw.UnifiedRawCommitSearchResponseDto
 import com.commitlens.commitlensapi.provider.api.GitProviderType
 import com.commitlens.commitlensapi.provider.internal.github.client.GitHubRestClient
 import com.commitlens.commitlensapi.provider.internal.strategy.RepositoryAwareGitProvider

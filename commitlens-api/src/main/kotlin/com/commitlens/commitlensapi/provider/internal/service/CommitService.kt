@@ -4,22 +4,25 @@ import com.commitlens.commitlensapi.core.exception.EmptySearchQueryException
 import com.commitlens.commitlensapi.core.exception.InvalidRequestParameterException
 import com.commitlens.commitlensapi.core.exception.ProviderCapabilityNotSupportedException
 import com.commitlens.commitlensapi.core.exception.ResourceNotFoundException
-import com.commitlens.commitlensapi.core.model.UnifiedRepoDto
-import com.commitlens.commitlensapi.core.model.commit.parsed.UnifiedCommitSearchResponseDto
-import com.commitlens.commitlensapi.core.model.commit.parsed.UnifiedParsedCommitDetailDto
-import com.commitlens.commitlensapi.core.model.commit.parsed.UnifiedParsedCommitDto
-import com.commitlens.commitlensapi.core.parser.api.CommitParserApi
+import com.commitlens.commitlensapi.provider.api.UnifiedRepoDto
+import com.commitlens.commitlensapi.provider.api.commit.parsed.UnifiedCommitSearchResponseDto
+import com.commitlens.commitlensapi.provider.api.commit.parsed.UnifiedParsedCommitDetailDto
+import com.commitlens.commitlensapi.provider.api.commit.parsed.UnifiedParsedCommitDto
+import com.commitlens.commitlensapi.parser.api.CommitParserApi
+import com.commitlens.commitlensapi.parser.api.dto.CommitPolicyDto
 import com.commitlens.commitlensapi.provider.api.GitProviderMetadataDto
 import com.commitlens.commitlensapi.provider.api.GitProviderType
 import com.commitlens.commitlensapi.provider.internal.strategy.GitProviderFactory
 import com.commitlens.commitlensapi.provider.internal.strategy.RepositoryAwareGitProvider
 import com.commitlens.commitlensapi.provider.internal.strategy.SearchableGitProvider
+import com.commitlens.commitlensapi.specification.api.CommitSpecificationApi
 import org.springframework.stereotype.Service
 
 @Service
 class CommitService(
     private val gitProviderFactory: GitProviderFactory,
-    private val commitParserApi: CommitParserApi
+    private val commitParserApi: CommitParserApi,
+    private val commitSpecificationApi: CommitSpecificationApi,
 ) {
 
     fun getSupportedProviders(): List<GitProviderMetadataDto> {
@@ -59,7 +62,8 @@ class CommitService(
         query: String,
         page: Int,
         perPage: Int,
-        provider: GitProviderType
+        provider: GitProviderType,
+        profileName: String? = null,
     ): UnifiedCommitSearchResponseDto {
 
         // Input validation
@@ -87,11 +91,13 @@ class CommitService(
         val searchResponse = strategy.searchCommits(owner, repo, query, page, perPage)
         val items = searchResponse.items
 
+        val policy: CommitPolicyDto = commitSpecificationApi.getCommitPolicy(profileName)
+
         // Map the raw commit data to the unified parsed commit DTOs
         val mapped = items.map { item ->
             UnifiedParsedCommitDto(
                 rawCommitDto = item,
-                parsedMessage = commitParserApi.parse(item.message ?: "")
+                parsedMessage = commitParserApi.parse(item.message ?: "", policy)
             )
         }
 
@@ -108,7 +114,8 @@ class CommitService(
         owner: String,
         repo: String,
         sha: String,
-        provider: GitProviderType
+        provider: GitProviderType,
+        profileName: String? = null
     ): UnifiedParsedCommitDetailDto {
 
         // Input validation
@@ -117,10 +124,13 @@ class CommitService(
         }
         val strategy = gitProviderFactory.getStrategy(provider)
         val items = strategy.getCommitDetails(owner, repo, sha)
+
+        val policy: CommitPolicyDto = commitSpecificationApi.getCommitPolicy(profileName)
+
         return UnifiedParsedCommitDetailDto(
             parsedCommitDto = UnifiedParsedCommitDto(
                 rawCommitDto = items.rawCommitDto,
-                parsedMessage = commitParserApi.parse(items.rawCommitDto.message ?: "")
+                parsedMessage = commitParserApi.parse(items.rawCommitDto.message ?: "", policy)
             ),
             totalAdditions = items.totalAdditions,
             totalDeletions = items.totalDeletions,

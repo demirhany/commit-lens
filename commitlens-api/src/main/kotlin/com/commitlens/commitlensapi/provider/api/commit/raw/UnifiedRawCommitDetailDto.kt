@@ -1,6 +1,6 @@
-package com.commitlens.commitlensapi.core.model.commit.raw
+package com.commitlens.commitlensapi.provider.api.commit.raw
 
-import com.commitlens.commitlensapi.core.model.UnifiedFileDiffDto
+import com.commitlens.commitlensapi.provider.api.UnifiedFileDiffDto
 
 data class UnifiedRawCommitDetailDto(
     val rawCommitDto : UnifiedRawCommitDto,

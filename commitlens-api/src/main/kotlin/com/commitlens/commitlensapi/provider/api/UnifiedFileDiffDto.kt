@@ -1,4 +1,4 @@
-package com.commitlens.commitlensapi.core.model
+package com.commitlens.commitlensapi.provider.api
 
 data class UnifiedFileDiffDto(
     val filename: String,

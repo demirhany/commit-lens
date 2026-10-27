@@ -1,6 +1,6 @@
-package com.commitlens.commitlensapi.core.model.commit.parsed
+package com.commitlens.commitlensapi.provider.api.commit.parsed
 
-import com.commitlens.commitlensapi.core.model.UnifiedFileDiffDto
+import com.commitlens.commitlensapi.provider.api.UnifiedFileDiffDto
 
 data class UnifiedParsedCommitDetailDto (
     val parsedCommitDto: UnifiedParsedCommitDto,

@@ -1,4 +1,4 @@
-package com.commitlens.commitlensapi.core.model.commit.raw
+package com.commitlens.commitlensapi.provider.api.commit.raw
 
 import java.time.Instant
 

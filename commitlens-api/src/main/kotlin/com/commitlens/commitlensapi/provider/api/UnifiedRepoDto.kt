@@ -1,4 +1,4 @@
-package com.commitlens.commitlensapi.core.model
+package com.commitlens.commitlensapi.provider.api
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
@@ -8,9 +8,6 @@ data class UnifiedRepoDto(
     val fullName: String,
     val owner: String,
     val defaultBranch: String,
-
-    @param:JsonProperty("isPrivate")
-    @get:JsonProperty("isPrivate")
     val isPrivate: Boolean,
     val htmlUrl: String,
 )
