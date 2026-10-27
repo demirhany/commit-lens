@@ -5,8 +5,8 @@ import org.springframework.stereotype.Component
 import java.lang.reflect.Method
 import java.security.MessageDigest
 
-@Component("userAwareKeyGenerator")
-class KeyGenerator : KeyGenerator {
+@Component("customKeyGenerator")
+class CustomKeyGenerator : KeyGenerator {
     override fun generate(
         target: Any,
         method: Method,
@@ -24,8 +24,9 @@ class KeyGenerator : KeyGenerator {
 
         // Use MD5 hashing to create a fixed-length representation of the parameters to avoid excessively long cache keys.
         val paramsHash = md5(canonicalParams)
+        val className = target::class.java.simpleName.substringBefore("$") // Remove any trailing '$' for Kotlin classes
 
-        return "commitlens:${method.name}:$paramsHash"
+        return "commitlens:$className:${method.name}:$paramsHash"
     }
 
     // Helper function to compute the MD5 hash of a string.
