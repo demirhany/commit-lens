@@ -1,7 +1,9 @@
 package com.commitlens.commitlensapi.jira.internal.service
 
-import com.commitlens.commitlensapi.core.parser.api.CommitParserApi
-import com.commitlens.commitlensapi.core.parser.api.ParsedCommitMessageDto
+import com.commitlens.commitlensapi.parser.api.CommitParserApi
+import com.commitlens.commitlensapi.parser.api.dto.CommitPolicyDto
+import com.commitlens.commitlensapi.parser.api.dto.ParsedCommitMessageDto
+import com.commitlens.commitlensapi.specification.api.CommitSpecificationApi
 import com.commitlens.commitlensapi.jira.internal.client.JiraRestClient
 import com.commitlens.commitlensapi.jira.internal.model.JiraDevStatusAuthorDto
 import com.commitlens.commitlensapi.jira.internal.model.JiraDevStatusCommitDto
@@ -28,7 +30,8 @@ class JiraServiceTest {
     private val jiraRestClient: JiraRestClient = mockk()
     private val jiraRepoUrlParser: JiraRepoUrlParser = mockk()
     private val commitParserApi: CommitParserApi = mockk()
-    private val jiraService = JiraService(jiraRestClient, jiraRepoUrlParser, commitParserApi)
+    private val commitSpecificationApi: CommitSpecificationApi = mockk()
+    private val jiraService = JiraService(jiraRestClient, jiraRepoUrlParser, commitParserApi, commitSpecificationApi)
 
     private val githubUrl = "https://github.com/acme/app"
     private val parsedMessage = ParsedCommitMessageDto(
@@ -60,7 +63,8 @@ class JiraServiceTest {
 
     @BeforeEach
     fun setUp() {
-        every { commitParserApi.parse(any()) } returns parsedMessage
+        every { commitSpecificationApi.getCommitPolicy(any()) } returns CommitPolicyDto.DEFAULT
+        every { commitParserApi.parse(any(), any()) } returns parsedMessage
         every { jiraRepoUrlParser.parseOrNull(githubUrl) } returns
             ResolvedRepoInfoDto(owner = "acme", repo = "app", provider = GitProviderType.GITHUB)
     }
@@ -96,7 +100,7 @@ class JiraServiceTest {
         assertEquals("Jane Doe", first.commit.rawCommitDto.authorName)
         assertEquals("$githubUrl/commit/1111111aaaa", first.commit.rawCommitDto.htmlUrl)
         assertSame(parsedMessage, first.commit.parsedMessage)
-        verify(exactly = 2) { commitParserApi.parse("feat: PROJ-1 add x") }
+        verify(exactly = 2) { commitParserApi.parse("feat: PROJ-1 add x", CommitPolicyDto.DEFAULT) }
     }
 
     /**
@@ -143,7 +147,7 @@ class JiraServiceTest {
         assertEquals(0, result.totalCommits)
         assertTrue(result.commits.isEmpty())
         assertEquals("No summary available", result.summary)
-        verify(exactly = 0) { commitParserApi.parse(any()) }
+        verify(exactly = 0) { commitParserApi.parse(any(), any()) }
     }
 
     /**

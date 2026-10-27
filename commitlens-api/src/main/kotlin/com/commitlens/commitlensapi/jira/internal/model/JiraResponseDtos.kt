@@ -1,6 +1,6 @@
 package com.commitlens.commitlensapi.jira.internal.model
 
-import com.commitlens.commitlensapi.core.model.commit.parsed.UnifiedParsedCommitDto
+import com.commitlens.commitlensapi.provider.api.commit.parsed.UnifiedParsedCommitDto
 import com.commitlens.commitlensapi.provider.api.GitProviderType
 
 data class JiraIssueCommitResponseDto(

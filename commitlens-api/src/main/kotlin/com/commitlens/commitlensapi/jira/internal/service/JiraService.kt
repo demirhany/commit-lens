@@ -1,30 +1,35 @@
 package com.commitlens.commitlensapi.jira.internal.service
 
-import com.commitlens.commitlensapi.core.model.commit.parsed.UnifiedParsedCommitDto
-import com.commitlens.commitlensapi.core.model.commit.raw.UnifiedRawCommitDto
-import com.commitlens.commitlensapi.core.parser.api.CommitParserApi
+import com.commitlens.commitlensapi.provider.api.commit.parsed.UnifiedParsedCommitDto
+import com.commitlens.commitlensapi.provider.api.commit.raw.UnifiedRawCommitDto
+import com.commitlens.commitlensapi.parser.api.CommitParserApi
+import com.commitlens.commitlensapi.parser.api.dto.CommitPolicyDto
 import com.commitlens.commitlensapi.core.util.logger
 import com.commitlens.commitlensapi.jira.internal.client.JiraRestClient
 import com.commitlens.commitlensapi.jira.internal.model.JiraCommitDto
 import com.commitlens.commitlensapi.jira.internal.model.JiraIssueCommitResponseDto
 import com.commitlens.commitlensapi.jira.internal.parser.JiraRepoUrlParser
+import com.commitlens.commitlensapi.specification.api.CommitSpecificationApi
 import org.springframework.stereotype.Service
 
 @Service
 class JiraService(
     private val jiraRestClient: JiraRestClient,
     private val jiraRepoUrlParser: JiraRepoUrlParser,
-    private val commitParserApi: CommitParserApi
+    private val commitParserApi: CommitParserApi,
+    private val commitSpecificationApi: CommitSpecificationApi
 ) {
     private val log = logger()
 
-    fun getIssueCommits(issueKey: String): JiraIssueCommitResponseDto {
+    fun getIssueCommits(issueKey: String, profileName: String? = null): JiraIssueCommitResponseDto {
 
         // Fetch the issue details from Jira
         val issue = jiraRestClient.getIssue(issueKey)
 
         // Fetch the development status for the issue to get associated commits
         val devStatus = jiraRestClient.getDevStatus(issue.id)
+
+        val policy: CommitPolicyDto = commitSpecificationApi.getCommitPolicy(profileName)
 
         val commits = devStatus.detail.flatMap { detail ->
             detail.repositories.flatMap { repo ->
@@ -45,7 +50,7 @@ class JiraService(
 
                         val parsedCommit = UnifiedParsedCommitDto(
                             rawCommitDto = rawCommit,
-                            parsedMessage = commitParserApi.parse(rawCommit.message)
+                            parsedMessage = commitParserApi.parse(rawCommit.message, policy)
                         )
 
                         JiraCommitDto(
