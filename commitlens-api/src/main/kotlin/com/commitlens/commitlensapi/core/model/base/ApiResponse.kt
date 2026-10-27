@@ -20,7 +20,15 @@ data class ApiResponse<T> (
             )
         }
 
-        // Hata senaryoları için factory metot (data içermez)
+        fun success(message: String? = null, status: Int = 200): ApiResponse<Unit> {
+            return ApiResponse(
+                success = true,
+                status = status,
+                message = message,
+                data = null
+            )
+        }
+
         fun error(status: Int, message: String, details: List<String>? = null): ApiResponse<Unit> {
             return ApiResponse(
                 success = false,
