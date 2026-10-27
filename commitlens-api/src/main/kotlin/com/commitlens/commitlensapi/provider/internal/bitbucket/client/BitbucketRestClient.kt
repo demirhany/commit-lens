@@ -58,7 +58,7 @@ class BitbucketRestClient(private val bitbucketProperties: BitbucketProperties) 
                     restClient.get().uri(nextUrl).retrieve().body(typeRef)
                 }
             } catch (e: Exception) {
-                log.error("Bitbucket diffstat sayfası alınırken hata oluştu ($owner/$repo@$sha, sayfa: $pageCount): {}", e.message)
+                log.error("Bitbucket diffstat page error ($owner/$repo@$sha, page: $pageCount): {}", e.message)
                 break
             } ?: break
 

@@ -1,7 +1,5 @@
 package com.commitlens.commitlensapi.provider.api
 
-import com.fasterxml.jackson.annotation.JsonProperty
-
 data class UnifiedRepoDto(
     val id: String,
     val name: String,
