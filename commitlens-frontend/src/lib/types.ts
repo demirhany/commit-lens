@@ -96,3 +96,45 @@ export interface JiraCommitContext {
   repoName?: string;
   provider: GitProvider;
 }
+
+// ─── Specifications ───────────────────────────────────────────────────────────
+export type ScopePolicy = "OPTIONAL" | "REQUIRED" | "DISABLED";
+
+/** Sentinel value used by the UI for the built-in Conventional Commits profile */
+export const DEFAULT_PROFILE = "DEFAULT";
+
+export interface SpecificationTypeResponse {
+  id: number;
+  name: string;
+  description?: string | null;
+}
+
+export interface SpecificationScopeResponse {
+  id: number;
+  name: string;
+  description?: string | null;
+}
+
+export interface SpecificationResponse {
+  id: number;
+  profileName: string;
+  description?: string | null;
+  types: SpecificationTypeResponse[];
+  scopes: SpecificationScopeResponse[];
+  scopePolicy: ScopePolicy;
+}
+
+export interface SpecificationItemRequest {
+  name: string;
+  description?: string | null;
+}
+
+export interface SpecificationCreateRequest {
+  profileName: string;
+  description?: string | null;
+  types: SpecificationItemRequest[];
+  scopes?: SpecificationItemRequest[] | null;
+  scopePolicy: ScopePolicy;
+}
+
+export type SpecificationUpdateRequest = SpecificationCreateRequest;

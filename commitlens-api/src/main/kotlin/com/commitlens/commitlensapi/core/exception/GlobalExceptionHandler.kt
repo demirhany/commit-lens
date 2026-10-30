@@ -30,14 +30,28 @@ class GlobalExceptionHandler {
 
     // ── Spring MVC binding / validation exceptions ────────────────────────────
 
-    // @Valid / @Validated field-level constraint violations.
+    // @Valid / @Validated field-level and object-level constraint violations.
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleValidationException(ex: MethodArgumentNotValidException): ResponseEntity<ApiResponse<Unit>> {
-        val errors = ex.bindingResult.fieldErrors.map { "${it.field}: ${it.defaultMessage}" }
+        val fieldErrors = ex.bindingResult.fieldErrors.map { "${it.field}: ${it.defaultMessage}" }
+        val globalErrors = ex.bindingResult.globalErrors.map { it.defaultMessage ?: "Invalid request" }
+        val errors = fieldErrors + globalErrors
         val errorResponse = ApiResponse.error(
             status = HttpStatus.BAD_REQUEST.value(),
             message = "The request contains invalid parameters",
             details = errors
+        )
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse)
+    }
+
+    // Handles database constraint violations (e.g. unique constraint, column length).
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException::class)
+    fun handleDataIntegrityViolationException(ex: org.springframework.dao.DataIntegrityViolationException): ResponseEntity<ApiResponse<Unit>> {
+        val detailMessage = ex.mostSpecificCause.message ?: ex.message ?: "Data integrity violation"
+        val errorResponse = ApiResponse.error(
+            status = HttpStatus.BAD_REQUEST.value(),
+            message = "Database constraint violation",
+            details = listOf(detailMessage)
         )
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse)
     }

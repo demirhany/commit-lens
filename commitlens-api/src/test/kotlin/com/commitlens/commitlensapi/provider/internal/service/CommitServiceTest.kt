@@ -3,14 +3,16 @@ package com.commitlens.commitlensapi.provider.internal.service
 import com.commitlens.commitlensapi.core.exception.EmptySearchQueryException
 import com.commitlens.commitlensapi.core.exception.InvalidRequestParameterException
 import com.commitlens.commitlensapi.core.exception.ProviderCapabilityNotSupportedException
-import com.commitlens.commitlensapi.core.model.UnifiedFileDiffDto
-import com.commitlens.commitlensapi.core.model.UnifiedRepoDto
-import com.commitlens.commitlensapi.core.model.commit.raw.UnifiedRawCommitDetailDto
-import com.commitlens.commitlensapi.core.model.commit.raw.UnifiedRawCommitDto
-import com.commitlens.commitlensapi.core.model.commit.raw.UnifiedRawCommitSearchResponseDto
-import com.commitlens.commitlensapi.core.parser.api.CommitParserApi
-import com.commitlens.commitlensapi.core.parser.api.ParsedCommitMessageDto
+import com.commitlens.commitlensapi.provider.api.UnifiedFileDiffDto
+import com.commitlens.commitlensapi.provider.api.UnifiedRepoDto
+import com.commitlens.commitlensapi.provider.api.commit.raw.UnifiedRawCommitDetailDto
+import com.commitlens.commitlensapi.provider.api.commit.raw.UnifiedRawCommitDto
+import com.commitlens.commitlensapi.provider.api.commit.raw.UnifiedRawCommitSearchResponseDto
+import com.commitlens.commitlensapi.parser.api.CommitParserApi
+import com.commitlens.commitlensapi.parser.api.dto.CommitPolicyDto
+import com.commitlens.commitlensapi.parser.api.dto.ParsedCommitMessageDto
 import com.commitlens.commitlensapi.provider.api.GitProviderCapability
+import com.commitlens.commitlensapi.specification.api.CommitSpecificationApi
 import com.commitlens.commitlensapi.provider.api.GitProviderType
 import com.commitlens.commitlensapi.provider.internal.strategy.GitProvider
 import com.commitlens.commitlensapi.provider.internal.strategy.GitProviderFactory
@@ -38,7 +40,8 @@ class CommitServiceTest {
 
     private val gitProviderFactory: GitProviderFactory = mockk()
     private val commitParserApi: CommitParserApi = mockk()
-    private val commitService = CommitService(gitProviderFactory, commitParserApi)
+    private val commitSpecificationApi: CommitSpecificationApi = mockk()
+    private val commitService = CommitService(gitProviderFactory, commitParserApi, commitSpecificationApi)
 
     private fun rawCommit(sha: String = "abc123", message: String? = "feat(api): add endpoint") = UnifiedRawCommitDto(
         sha = sha,
@@ -59,7 +62,10 @@ class CommitServiceTest {
     )
 
     @BeforeEach
-    fun setUp() = clearAllMocks()
+    fun setUp() {
+        clearAllMocks()
+        every { commitSpecificationApi.getCommitPolicy(any()) } returns CommitPolicyDto.DEFAULT
+    }
 
     @Nested
     inner class GetSupportedProviders {
@@ -183,8 +189,8 @@ class CommitServiceTest {
             every { gitProviderFactory.getStrategy(GitProviderType.GITHUB) } returns provider
             val parsedFirst = parsed("feat(api): add endpoint")
             val parsedSecond = parsed("")
-            every { commitParserApi.parse("feat(api): add endpoint") } returns parsedFirst
-            every { commitParserApi.parse("") } returns parsedSecond
+            every { commitParserApi.parse("feat(api): add endpoint", CommitPolicyDto.DEFAULT) } returns parsedFirst
+            every { commitParserApi.parse("", CommitPolicyDto.DEFAULT) } returns parsedSecond
 
             val result = commitService.searchCommits("acme", "app", "feat", 2, 50, GitProviderType.GITHUB)
 
@@ -194,8 +200,8 @@ class CommitServiceTest {
             assertEquals(listOf(first, second), result.items.map { it.rawCommitDto })
             assertSame(parsedFirst, result.items[0].parsedMessage)
             assertSame(parsedSecond, result.items[1].parsedMessage)
-            verify(exactly = 1) { commitParserApi.parse("feat(api): add endpoint") }
-            verify(exactly = 1) { commitParserApi.parse("") }
+            verify(exactly = 1) { commitParserApi.parse("feat(api): add endpoint", CommitPolicyDto.DEFAULT) }
+            verify(exactly = 1) { commitParserApi.parse("", CommitPolicyDto.DEFAULT) }
         }
     }
 
@@ -231,7 +237,7 @@ class CommitServiceTest {
                 UnifiedRawCommitDetailDto(rawCommitDto = commit, totalAdditions = 15, totalDeletions = 2, files = files)
             every { gitProviderFactory.getStrategy(GitProviderType.GITHUB) } returns provider
             val parsedMessage = parsed(commit.message!!)
-            every { commitParserApi.parse(commit.message) } returns parsedMessage
+            every { commitParserApi.parse(commit.message, CommitPolicyDto.DEFAULT) } returns parsedMessage
 
             val result = commitService.getCommitDetails("acme", "app", "deadbeef", GitProviderType.GITHUB)
 
@@ -240,6 +246,7 @@ class CommitServiceTest {
             assertEquals(15, result.totalAdditions)
             assertEquals(2, result.totalDeletions)
             assertEquals(files, result.files)
+            verify(exactly = 1) { commitParserApi.parse(commit.message, CommitPolicyDto.DEFAULT) }
         }
     }
 }

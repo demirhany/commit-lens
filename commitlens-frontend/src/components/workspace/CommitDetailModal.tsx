@@ -27,6 +27,8 @@ interface CommitDetailModalProps {
   /** Active search query for body highlight */
   activeQuery: string;
   onClose: () => void;
+  /** Specification profile used for parsing; omitted/"DEFAULT" = backend default */
+  profileName?: string;
   /** Jira mode: pass owner/repo/provider explicitly (overrides repo object) */
   owner?: string;
   repoName?: string;
@@ -97,6 +99,7 @@ export function CommitDetailModal({
   repo,
   activeQuery,
   onClose,
+  profileName,
   owner: ownerProp,
   repoName: repoNameProp,
   provider: providerProp,
@@ -110,12 +113,12 @@ export function CommitDetailModal({
 
   useEffect(() => {
     if (sha && resolvedOwner && resolvedRepo) {
-      load(resolvedOwner, resolvedRepo, sha, resolvedProvider);
+      load(resolvedOwner, resolvedRepo, sha, resolvedProvider, profileName);
     } else {
       clear();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sha, resolvedOwner, resolvedRepo, resolvedProvider]);
+  }, [sha, resolvedOwner, resolvedRepo, resolvedProvider, profileName]);
 
   const handleClose = () => {
     clear();
@@ -155,8 +158,10 @@ export function CommitDetailModal({
           <Skeleton className="h-5 w-48 mb-1" />
         ) : (
           <div className="flex flex-wrap items-center gap-2 mb-0.5">
-            {isConventional && type !== "raw" && (
-              <Badge commitType={type}>{type}</Badge>
+            {type !== "raw" && (
+              <Badge commitType={isConventional ? type : undefined} variant={!isConventional ? "error" : "default"}>
+                {type}
+              </Badge>
             )}
             {isBreaking && (
               <Badge variant="breaking">

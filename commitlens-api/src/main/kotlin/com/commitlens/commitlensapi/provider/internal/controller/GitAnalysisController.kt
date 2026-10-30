@@ -1,9 +1,9 @@
 package com.commitlens.commitlensapi.provider.internal.controller
 
-import com.commitlens.commitlensapi.core.model.UnifiedRepoDto
+import com.commitlens.commitlensapi.provider.api.UnifiedRepoDto
 import com.commitlens.commitlensapi.core.model.base.ApiResponse
-import com.commitlens.commitlensapi.core.model.commit.parsed.UnifiedCommitSearchResponseDto
-import com.commitlens.commitlensapi.core.model.commit.parsed.UnifiedParsedCommitDetailDto
+import com.commitlens.commitlensapi.provider.api.commit.parsed.UnifiedCommitSearchResponseDto
+import com.commitlens.commitlensapi.provider.api.commit.parsed.UnifiedParsedCommitDetailDto
 import com.commitlens.commitlensapi.provider.internal.service.CommitService
 import com.commitlens.commitlensapi.provider.api.GitProviderMetadataDto
 import com.commitlens.commitlensapi.provider.api.GitProviderType
@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
-import org.springframework.cache.annotation.Cacheable
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
@@ -51,7 +50,6 @@ class GitAnalysisController(
 
     // Fetch and return a list of repositories from the specified Git provider (default is GitHub)
     @GetMapping("/repos")
-    @Cacheable(value = ["repos-cache"], keyGenerator = "userAwareKeyGenerator")
     @Operation(
         summary = "List repositories",
         description = "Lists repositories accessible with the configured token of the selected provider. " +
@@ -75,7 +73,6 @@ class GitAnalysisController(
 
     // Fetch and return detailed information about a specific repository from the specified Git provider (default is GitHub)
     @GetMapping("/repos/{owner}/{repo}")
-    @Cacheable(value = ["repo-cache"], keyGenerator = "userAwareKeyGenerator")
     @Operation(
         summary = "Get repository details",
         description = "Returns metadata (default branch, visibility, URL) for a single repository."
@@ -107,7 +104,6 @@ class GitAnalysisController(
 
     // Search for commits in a specific repository of the specified Git provider (default is GitHub)
     @GetMapping("/repos/{owner}/{repo}/commits")
-    @Cacheable(value = ["commit-search-cache"], keyGenerator = "userAwareKeyGenerator")
     @Operation(
         summary = "Search commits",
         description = "Searches commits in a repository and parses every message according to the " +
@@ -131,6 +127,8 @@ class GitAnalysisController(
         @PathVariable owner: String,
         @Parameter(description = "Repository name (slug).", example = "spring-boot")
         @PathVariable repo: String,
+        @Parameter(description = "Name of the profile to use for the Git integration.", example = "default")
+        @RequestParam(required = false) profileName: String? = null,
         @Parameter(description = "Free-text search query applied to commit messages. Must not be blank.", example = "fix")
         @RequestParam query: String,
         @Parameter(description = "1-based page number.", example = "1")
@@ -140,13 +138,12 @@ class GitAnalysisController(
         @Parameter(description = "Git provider to query.", example = "GITHUB")
         @RequestParam(defaultValue = "GITHUB") provider: GitProviderType
     ): ApiResponse<UnifiedCommitSearchResponseDto> {
-        val searchResult = commitService.searchCommits(owner, repo, query, page, perPage, provider)
+        val searchResult = commitService.searchCommits(owner, repo, query, page, perPage, provider, profileName)
         return ApiResponse.success(data = searchResult)
     }
 
     // Fetch and return detailed information about a specific commit in a repository of the specified Git provider (default is GitHub)
     @GetMapping("/repos/{owner}/{repo}/commits/{sha}")
-    @Cacheable(value = ["commit-details-cache"], keyGenerator = "userAwareKeyGenerator")
     @Operation(
         summary = "Get commit details",
         description = "Returns a single commit with its parsed Conventional Commit message, " +
@@ -170,12 +167,14 @@ class GitAnalysisController(
         @PathVariable owner: String,
         @Parameter(description = "Repository name (slug).", example = "spring-boot")
         @PathVariable repo: String,
+        @Parameter(description = "Name of the profile to use for the Git integration.", example = "default")
+        @RequestParam(required = false) profileName: String? = null,
         @Parameter(description = "Full or abbreviated commit SHA.", example = "a1b2c3d4e5f6")
         @PathVariable sha: String,
         @Parameter(description = "Git provider to query.", example = "GITHUB")
         @RequestParam(defaultValue = "GITHUB") provider: GitProviderType
     ): ApiResponse<UnifiedParsedCommitDetailDto> {
-        val commitDetails = commitService.getCommitDetails(owner, repo, sha, provider)
+        val commitDetails = commitService.getCommitDetails(owner, repo, sha, provider, profileName)
         return ApiResponse.success(data = commitDetails)
     }
 }

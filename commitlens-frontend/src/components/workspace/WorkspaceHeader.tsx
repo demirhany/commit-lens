@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useRef, useEffect, KeyboardEvent } from "react";
-import { GitCommitHorizontal, GitFork, Search, Command, Sun, Moon } from "lucide-react";
+import { Search, Command } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useTheme } from "@/context/ThemeContext";
-import type { UnifiedRepo } from "@/lib/types";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { ProfileSelector } from "@/components/workspace/ProfileSelector";
+import type { SpecificationResponse, UnifiedRepo } from "@/lib/types";
 
 export type SearchMode = "github" | "jira";
 
@@ -17,7 +18,11 @@ interface WorkspaceHeaderProps {
   isJiraSearching: boolean;
   /** Controlled mode — lifted to parent so mode survives re-renders */
   searchMode: SearchMode;
-  onSearchModeChange: (mode: SearchMode) => void;
+  /** Specification profiles shown in the dropdown next to the search box */
+  profiles: SpecificationResponse[];
+  profilesLoading?: boolean;
+  selectedProfile: string;
+  onProfileChange: (profileName: string) => void;
 }
 
 // Simple Jira key regex: one or more uppercase letters, dash, one or more digits
@@ -30,13 +35,15 @@ export function WorkspaceHeader({
   onJiraSearch,
   isJiraSearching,
   searchMode,
-  onSearchModeChange,
+  profiles,
+  profilesLoading,
+  selectedProfile,
+  onProfileChange,
 }: WorkspaceHeaderProps) {
   const [githubQuery, setGithubQuery] = useState("");
   const [jiraQuery, setJiraQuery] = useState("");
   const githubInputRef = useRef<HTMLInputElement>(null);
   const jiraInputRef = useRef<HTMLInputElement>(null);
-  const { theme, toggleTheme } = useTheme();
 
   // Cmd+K / Ctrl+K shortcut
   useEffect(() => {
@@ -81,90 +88,9 @@ export function WorkspaceHeader({
     jiraQuery.length < 2 || JIRA_KEY_RE.test(jiraQuery.trim().toUpperCase());
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-4 border-b border-zinc-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 px-5 backdrop-blur-md transition-colors">
-      {/* Logo */}
-      <div className="flex items-center gap-2 shrink-0">
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/10 ring-1 ring-indigo-500/30">
-          <GitCommitHorizontal size={15} className="text-indigo-600 dark:text-indigo-400" />
-        </div>
-        <span className="text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-          CommitLens
-        </span>
-      </div>
-
-      {/* ── Mode selector ── */}
-      <div className="flex items-center gap-1 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-100/80 dark:bg-zinc-950/60 p-1 shrink-0">
-        {/* GitHub mode */}
-        <button
-          onClick={() => onSearchModeChange("github")}
-          title="Search commits inside a GitHub repository"
-          className={cn(
-            "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-all duration-150 cursor-pointer",
-            searchMode === "github"
-              ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-200 shadow-xs"
-              : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300"
-          )}
-        >
-          <GitFork size={12} />
-          GitHub
-          <span className="ml-0.5 rounded bg-zinc-100 dark:bg-zinc-700/80 px-1.5 py-0.5 text-[9px] font-semibold text-zinc-500 dark:text-zinc-400">
-            Max 1K
-          </span>
-        </button>
-
-        {/* Jira mode */}
-        <button
-          onClick={() => onSearchModeChange("jira")}
-          title="GitHub ve Bitbucket bağlantılı Jira biletlerini analiz eder — tek bilet altındaki tüm repo commit'lerini görüntüleyin"
-          className={cn(
-            "flex flex-col items-center gap-0.5 rounded-md px-2.5 py-1 text-xs font-medium transition-all duration-150 cursor-pointer",
-            searchMode === "jira"
-              ? "bg-indigo-500 text-white shadow-xs"
-              : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300"
-          )}
-        >
-          {/* Row 1: J mark + label */}
-          <span className="flex items-center gap-1.5">
-            <span
-              className={cn(
-                "inline-flex h-3.5 w-3.5 items-center justify-center rounded text-[9px] font-black leading-none",
-                searchMode === "jira"
-                  ? "bg-white/20 text-white"
-                  : "bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400"
-              )}
-            >
-              J
-            </span>
-            Jira
-          </span>
-          {/* Row 2: provider mini-tags — always visible */}
-          <span className="flex items-center gap-0.5">
-            <span
-              className={cn(
-                "rounded px-1 py-px text-[8px] font-semibold leading-none",
-                searchMode === "jira"
-                  ? "bg-white/20 text-white"
-                  : "bg-zinc-200 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400"
-              )}
-            >
-              GH
-            </span>
-            <span
-              className={cn(
-                "rounded px-1 py-px text-[8px] font-semibold leading-none",
-                searchMode === "jira"
-                  ? "bg-blue-400/30 text-blue-100"
-                  : "bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400"
-              )}
-            >
-              BB
-            </span>
-          </span>
-        </button>
-      </div>
-
+    <header className="flex h-14 shrink-0 items-center gap-4 border-b border-zinc-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 px-5 backdrop-blur-md z-30 transition-colors">
       {/* ── Search bar — centred ── */}
-      <div className="flex flex-1 justify-center px-4">
+      <div className="flex flex-1 items-center justify-center gap-3 px-4">
         {searchMode === "github" ? (
           /* GitHub search input */
           <div
@@ -253,21 +179,16 @@ export function WorkspaceHeader({
             )}
           </div>
         )}
+        <ProfileSelector
+          profiles={profiles}
+          loading={profilesLoading}
+          value={selectedProfile}
+          onChange={onProfileChange}
+        />
       </div>
 
       {/* Theme Toggle Button */}
-      <button
-        onClick={toggleTheme}
-        title={theme === "dark" ? "Switch to Light mode" : "Switch to Dark mode"}
-        className="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shadow-xs shrink-0 cursor-pointer"
-        aria-label="Toggle theme"
-      >
-        {theme === "dark" ? (
-          <Sun size={16} className="text-amber-400 transition-transform duration-200 hover:rotate-12" />
-        ) : (
-          <Moon size={16} className="text-indigo-600 transition-transform duration-200 hover:-rotate-12" />
-        )}
-      </button>
+      <ThemeToggle />
     </header>
   );
 }

@@ -1,4 +1,2 @@
-@org.springframework.modulith.ApplicationModule(
-        type = org.springframework.modulith.ApplicationModule.Type.OPEN
-)
+@org.springframework.modulith.NamedInterface("provider-api")
 package com.commitlens.commitlensapi.provider.api;

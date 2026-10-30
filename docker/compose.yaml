@@ -1,0 +1,6 @@
+name: commitlens
+
+include:
+  - infra/compose.yaml
+  - api/compose.yaml
+  - frontend/compose.yaml

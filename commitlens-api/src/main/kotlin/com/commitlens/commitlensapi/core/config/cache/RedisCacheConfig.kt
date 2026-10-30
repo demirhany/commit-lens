@@ -51,11 +51,23 @@ class RedisCacheConfig(private val customCacheErrorHandler: CustomCacheErrorHand
         return RedisCacheManager.builder(connectionFactory)
             // Set the default cache configuration for all caches managed by this manager
             .cacheDefaults(cacheConfiguration)
-            .withCacheConfiguration("repos-cache", cacheConfiguration.entryTtl(Duration.ofHours(1)))
-            .withCacheConfiguration("repo-cache", cacheConfiguration.entryTtl(Duration.ofHours(1)))
-            .withCacheConfiguration("commit-search-cache", cacheConfiguration.entryTtl(Duration.ofMinutes(10)))
-            .withCacheConfiguration("commit-details-cache", cacheConfiguration.entryTtl(Duration.ofHours(24)))
-            .withCacheConfiguration("jira-commits-cache", cacheConfiguration.entryTtl(Duration.ofMinutes(10)))
+
+            // GitHub Caches
+            .withCacheConfiguration("github-repos-cache", cacheConfiguration.entryTtl(Duration.ofHours(1)))
+            .withCacheConfiguration("github-repo-cache", cacheConfiguration.entryTtl(Duration.ofHours(1)))
+            .withCacheConfiguration("github-recent-commits-cache", cacheConfiguration.entryTtl(Duration.ofMinutes(10)))
+            .withCacheConfiguration("github-search-commits-cache", cacheConfiguration.entryTtl(Duration.ofMinutes(10)))
+
+            // Commit SHA's and their details are cached for 24 hours to reduce repeated API calls for the same commit information.
+            .withCacheConfiguration("github-commit-detail-cache", cacheConfiguration.entryTtl(Duration.ofHours(24)))
+
+            // Bitbucket Caches
+            .withCacheConfiguration("bitbucket-commit-detail-cache", cacheConfiguration.entryTtl(Duration.ofHours(24)))
+            .withCacheConfiguration("bitbucket-commit-diffstat-cache", cacheConfiguration.entryTtl(Duration.ofHours(24)))
+
+            // Jira Caches
+            .withCacheConfiguration("jira-issue-cache", cacheConfiguration.entryTtl(Duration.ofMinutes(15)))
+            .withCacheConfiguration("jira-dev-status-cache", cacheConfiguration.entryTtl(Duration.ofMinutes(10)))
             .build()
     }
 }

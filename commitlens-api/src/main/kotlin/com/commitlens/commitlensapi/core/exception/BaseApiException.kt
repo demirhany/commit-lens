@@ -11,8 +11,14 @@ abstract class BaseApiException(
 // Requested commit, repo or any identifiable resource could not be found.
 class ResourceNotFoundException(message: String) : BaseApiException(message, HttpStatus.NOT_FOUND)
 
+// ── 409 ──────────────────────────────────────────────────────────────────────
+// The caller attempted to create a resource that already exists.
+class ResourceAlreadyExistsException(message: String) : BaseApiException(message, HttpStatus.CONFLICT)
+
 // ── 400 ──────────────────────────────────────────────────────────────────────
 // The caller supplied an unsupported Git provider identifier.
+class BadRequestException(message: String) : BaseApiException(message, HttpStatus.BAD_REQUEST)
+
 class UnsupportedProviderException(message: String) : BaseApiException(message, HttpStatus.BAD_REQUEST)
 
 // A generic request-parameter constraint was violated (e.g. limit ≤ 0).

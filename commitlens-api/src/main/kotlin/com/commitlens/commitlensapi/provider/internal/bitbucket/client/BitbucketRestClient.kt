@@ -4,6 +4,7 @@ import com.commitlens.commitlensapi.core.util.logger
 import com.commitlens.commitlensapi.provider.internal.bitbucket.model.BitbucketCommitDto
 import com.commitlens.commitlensapi.provider.internal.bitbucket.model.BitbucketDiffStatDto
 import com.commitlens.commitlensapi.provider.internal.bitbucket.model.BitbucketPagedResponse
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Component
@@ -21,6 +22,11 @@ class BitbucketRestClient(private val bitbucketProperties: BitbucketProperties) 
         .build()
 
     // Get commit details (author, message, date, parents)
+    @Cacheable(
+        value = ["bitbucket-commit-detail-cache"],
+        keyGenerator = "customKeyGenerator",
+        unless = "#result == null"
+    )
     fun getCommitDetail(owner: String, repo: String, sha: String): BitbucketCommitDto {
         return restClient.get()
             .uri("/repositories/{owner}/{repo}/commit/{sha}", owner, repo, sha)
@@ -30,6 +36,11 @@ class BitbucketRestClient(private val bitbucketProperties: BitbucketProperties) 
     }
 
     // Get commit file changes, additions, and deletions (diffstat)
+    @Cacheable(
+        value = ["bitbucket-commit-diffstat-cache"],
+        keyGenerator = "customKeyGenerator",
+        unless = "#result == null"
+    )
     fun getAllCommitDiffStats(owner: String, repo: String, sha: String): List<BitbucketDiffStatDto> {
         val allDiffs = mutableListOf<BitbucketDiffStatDto>()
         var nextUrl: String? = "/repositories/$owner/$repo/diffstat/$sha?pagelen=100"
@@ -47,7 +58,7 @@ class BitbucketRestClient(private val bitbucketProperties: BitbucketProperties) 
                     restClient.get().uri(nextUrl).retrieve().body(typeRef)
                 }
             } catch (e: Exception) {
-                log.error("Bitbucket diffstat sayfası alınırken hata oluştu ($owner/$repo@$sha, sayfa: $pageCount): {}", e.message)
+                log.error("Bitbucket diffstat page error ($owner/$repo@$sha, page: $pageCount): {}", e.message)
                 break
             } ?: break
 

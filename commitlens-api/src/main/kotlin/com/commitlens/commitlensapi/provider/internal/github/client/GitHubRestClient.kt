@@ -4,6 +4,7 @@ import com.commitlens.commitlensapi.provider.internal.github.model.GitHubCommitI
 import com.commitlens.commitlensapi.provider.internal.github.model.GitHubRepoDto
 import com.commitlens.commitlensapi.provider.internal.github.model.GitHubSearchCommitResponseDto
 import com.commitlens.commitlensapi.provider.internal.github.model.GitHubSingleCommitDto
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Component
@@ -22,6 +23,11 @@ class GitHubRestClient(
         .build()
 
     // List the repositories that the authenticated user has access to
+    @Cacheable(
+        value = ["github-repos-cache"],
+        keyGenerator = "customKeyGenerator",
+        unless = "#result == null"
+    )
     fun getAllUserRepos(): List<GitHubRepoDto> {
         val allRepos = mutableListOf<GitHubRepoDto>()
         var page = 1
@@ -54,6 +60,11 @@ class GitHubRestClient(
     }
 
     // Get details of a specific repository by owner and repo name
+    @Cacheable(
+        value = ["github-repo-cache"],
+        keyGenerator = "customKeyGenerator",
+        unless = "#result == null"
+    )
     fun getRepo(owner: String, repo: String): GitHubRepoDto {
         return restClient.get()
             .uri("/repos/{owner}/{repo}", owner, repo)
@@ -63,6 +74,11 @@ class GitHubRestClient(
     }
 
     // Search for commits in a specific repository based on the provided query (including substrings like "Jira key", "feat", etc.)
+    @Cacheable(
+        value = ["github-search-commits-cache"],
+        keyGenerator = "customKeyGenerator",
+        unless = "#result == null"
+    )
     fun searchCommits(
         owner: String,
         repo: String,
@@ -87,6 +103,11 @@ class GitHubRestClient(
     }
 
     // Get the recent commits from a specific repository, with optional pagination parameters (page and perPage)
+    @Cacheable(
+        value = ["github-recent-commits-cache"],
+        keyGenerator = "customKeyGenerator",
+        unless = "#result == null"
+    )
     fun getRecentCommits(owner: String, repo: String, page: Int = 1, perPage: Int = 100): List<GitHubCommitItemDto> {
         return restClient.get()
             .uri("/repos/{owner}/{repo}/commits?page={page}&per_page={perPage}", owner, repo, page, perPage)
@@ -96,6 +117,11 @@ class GitHubRestClient(
     }
 
     // Get commit details including stats, file changes, and patches
+    @Cacheable(
+        value = ["github-commit-detail-cache"],
+        keyGenerator = "customKeyGenerator",
+        unless = "#result == null"
+    )
     fun getCommitDetail(owner: String, repo: String, sha: String): GitHubSingleCommitDto {
         return restClient.get()
             .uri("/repos/{owner}/{repo}/commits/{sha}", owner, repo, sha)

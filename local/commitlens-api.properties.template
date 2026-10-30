@@ -13,3 +13,8 @@ jira.token=
 spring.cache.type=redis
 spring.data.redis.host=
 spring.data.redis.port=
+
+spring.datasource.url=
+spring.datasource.username=
+spring.datasource.password=
+spring.jpa.hibernate.ddl-auto=
