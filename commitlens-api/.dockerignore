@@ -1,7 +1,12 @@
 target/
 .git/
+.git
 .idea/
 *.iml
 local/
 .env
 *.env
+.env.*
+*.key
+*.pem
+*.log
