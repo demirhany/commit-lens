@@ -32,7 +32,6 @@ jobs:
         with:
           images: |
             ghcr.io/${{ github.repository }}/backend
-            ghcr.io/${{ github.repository }}/api
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
