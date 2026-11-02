@@ -43,6 +43,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       # Redis settings
       SPRING_DATA_REDIS_HOST: redis
